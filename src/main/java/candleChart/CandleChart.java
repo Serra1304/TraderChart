@@ -4,12 +4,12 @@ import candleChart.controller.ChartController;
 import candleChart.controller.PriceLineController;
 import candleChart.controller.TimeLineController;
 import candleChart.controller.TitleController;
-import candleChart.model.Candle;
+import candleChart.data.Buffer;
 import candleChart.view.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * The CandleChart class acts as the main component that coordinates other controllers and views to display a candle chart.
@@ -31,6 +31,9 @@ public class CandleChart extends JPanel {
     private final PriceLineController priceLineController;
     private final TimeLineController timeLineController;
     private final TitleController titleController;
+
+    private Buffer buffer;
+    private Buffer bufferUpdate;
 
     /**
      * Constructor of the CandleChart class. Initializes the views, controllers and configures the chart user interface.
@@ -69,6 +72,8 @@ public class CandleChart extends JPanel {
         add(timeLineView, BorderLayout.SOUTH);
         add(priceLineView, BorderLayout.EAST);
         add(chartView, BorderLayout.CENTER);
+
+        buffer = new Buffer();
     }
 
     /**
@@ -125,12 +130,44 @@ public class CandleChart extends JPanel {
         return titleController.getChartTitle();
     }
 
+
+    /* Método sustituido por setBuffer y update */
+
+//    /**
+//     * Sets the set of candles to display on the chart.
+//     *
+//     * @param candleList List of candles to display on the chart.
+//     */
+//    public void setCandleBuffer(List<Candle> candleList) {
+//        chartController.setCandleBuffer(candleList);
+//    }
+
+
     /**
-     * Sets the set of candles to display on the chart.
+     * Establece un buffer de datos en el gráfico. Para que cualquier cambio en el buffer sea representado gráficamente,
+     * es necesario hacer una llamada al método update.
      *
-     * @param candleList List of candles to display on the chart.
+     * @param buffer El buffer de datos a agregar al grafico.
      */
-    public void setCandleBuffer(List<Candle> candleList) {
-        chartController.setCandleBuffer(candleList);
+    public void setBuffer(Buffer buffer) {
+        this.buffer = buffer;
+    }
+
+    /**
+     * Obtiene el buffer de datos que contiene el gráfico, con todos los valores almacenado antes de haber llamado al
+     * método update. Esto quiere decir que el buffer puede contener elementos que aún no hayan sido actualizados en
+     * el gráfico.
+     *
+     * @return El buffer de datos del grafico.
+     */
+    public Buffer getBuffer() {
+        return buffer;
+    }
+
+    /**
+     * Método que actualiza los datos del buffer en el gráfico.
+     */
+    public void update() {
+        chartController.setCandleBuffer(new ArrayList<>(buffer.getAll()));
     }
 }
