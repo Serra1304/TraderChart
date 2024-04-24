@@ -33,7 +33,6 @@ public class CandleChart extends JPanel {
     private final TitleController titleController;
 
     private Buffer buffer;
-    private Buffer bufferUpdate;
 
     /**
      * Constructor of the CandleChart class. Initializes the views, controllers and configures the chart user interface.
