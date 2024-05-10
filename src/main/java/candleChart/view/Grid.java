@@ -11,8 +11,8 @@ import java.awt.geom.Line2D;
 public class Grid extends JPanel {
 
     // Propiedades de la cuadrícula
-    private double gridX;
-    private double gridY;
+    private int gridX;
+    private int gridY;
     private boolean gridVisible;
 
 
@@ -21,8 +21,8 @@ public class Grid extends JPanel {
      */
     public Grid() {
         // Valores predeterminados de la cuadrícula.
-        gridX = 20;
-        gridY = 20;
+        gridX = 32;
+        gridY = 32;
         gridVisible = true;
 
         // Se establece el fondo de la cuadrícula como transparente.
@@ -50,16 +50,14 @@ public class Grid extends JPanel {
             g2d.setColor(Color.DARK_GRAY);
 
             // Dibuja las líneas verticales.
-            for (int x = -1; x < getWidth(); x += (int) gridX) {
+            for (int x = -1; x < getWidth(); x += gridX) {
                 g2d.draw(new Line2D.Double(x, 0, x, getHeight()));
             }
 
             // Dibuja las líneas horizontales.
-            for (int i = 1; i < getHeight() / gridX; i++) {
-                int y = (int) Math.floor(i * gridY);
-                g2d.draw(new Line2D.Double(0, y, getWidth(), y));
+            for (int i = getHeight()+1; i > 0; i -= gridY) {
+                g2d.draw(new Line2D.Double(0, i, getWidth(), i));
             }
-            //g2d.setStroke(new BasicStroke());
         }
     }
 
@@ -70,7 +68,7 @@ public class Grid extends JPanel {
      * @param gridX Anchura de la división vertical.
      * @param gridY Altura de la división horizontal.
      */
-    public void setGridSize(double gridX, double gridY) {
+    public void setGridSize(int gridX, int gridY) {
         if(gridX > 1 && gridY > 1) {
             this.gridX = gridX;
             this.gridY = gridY;

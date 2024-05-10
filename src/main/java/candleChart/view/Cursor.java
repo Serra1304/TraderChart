@@ -11,8 +11,8 @@ import java.awt.*;
 public class Cursor extends JPanel {
 
     // Propiedades del cursor
-    private int positionX;
-    private int positionY;
+    private int locationX;
+    private int locationY;
     private boolean cursorVisible;
 
     /**
@@ -20,11 +20,11 @@ public class Cursor extends JPanel {
      */
     public Cursor() {
         // Valores predeterminados del cursor.
-        positionX = 0;
-        positionY = 0;
-        cursorVisible = true;
+        locationX = 0;
+        locationY = 0;
+        cursorVisible = false;
 
-        // Se establece el fondo como transparente.
+        // Configuración de la vista Cursor.
         setOpaque(false);
     }
 
@@ -41,8 +41,8 @@ public class Cursor extends JPanel {
         // Pinta el cursor si cursorVisible está establecido como true.
         if (cursorVisible) {
             g.setColor(Color.GRAY);
-            g.drawLine(positionX, 0, positionX, getHeight());
-            g.drawLine(0, positionY, getWidth(), positionY);
+            g.drawLine(locationX, 0, locationX, getHeight());
+            g.drawLine(0, locationY, getWidth(), locationY);
         }
     }
 
@@ -53,9 +53,9 @@ public class Cursor extends JPanel {
      * @param x Coordenadas del cursor en el eje X.
      * @param y Coordenadas del cursor en el eje Y.
      */
-    public void setCursorPosition(int x, int y) {
-        positionX = x -1;
-        positionY = y -1;
+    public void setCursorLocation(int x, int y) {
+        locationX = x;
+        locationY = y;
         repaint();
     }
 
@@ -65,8 +65,8 @@ public class Cursor extends JPanel {
      *
      * @return Coordenada del cursor en el eje X.
      */
-    public int getPositionX() {
-        return positionX;
+    public int getLocationX() {
+        return locationX;
     }
 
 
@@ -75,8 +75,8 @@ public class Cursor extends JPanel {
      *
      * @return La posición del cursor en el eje Y.
      */
-    public int getPositionY() {
-        return positionY;
+    public int getLocationY() {
+        return locationY;
     }
 
 
@@ -88,6 +88,7 @@ public class Cursor extends JPanel {
      */
     public void setCursorVisible(boolean cursorVisible) {
         this.cursorVisible = cursorVisible;
+        repaint();
     }
 
 

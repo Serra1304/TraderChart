@@ -1,183 +1,188 @@
 package candleChart.controller;
 
-import candleChart.interfaces.ChartObserver;
-import candleChart.model.Candle;
-import candleChart.view.CandleView;
-import candleChart.view.ChartView;
+import candleChart.data.Buffer;
+import candleChart.view.*;
+import candleChart.view.Cursor;
 
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * The main driver for the candle chart.
- * It is responsible for coordinating the interaction between the different components of the graph.
- */
 public class ChartController {
-    private final ChartView chartView;
+    private final ChartArea chartArea;
+    private final PriceLine priceLine;
+    private final TimeLine timeLine;
+    private final Info info;
+    private final Cursor cursor;
+    private final Grid grid;
+    private final CandleView candleView;
     private final CandleController candleController;
-    private final CursorController cursorController;
-    private final GridController gridController;
+    private Buffer buffer;
 
-    private final List<ChartObserver> observers;
-    private int width, height;
+    public ChartController(JPanel jPanel) {
+        chartArea = new ChartArea();
+        priceLine = new PriceLine();
+        timeLine = new TimeLine();
+        info = new Info();
+        cursor = new Cursor();
+        grid = new Grid();
+        candleView = new CandleView();
+        candleController = new CandleController(candleView);
+        buffer = new Buffer();
+
+        chartArea.add(candleView);
+        chartArea.add(cursor);
+        chartArea.add(grid);
+
+        info.addInfo("");
+        info.addInfo("");
+
+        jPanel.setLayout(new BorderLayout());
+        jPanel.setDoubleBuffered(true);
+        jPanel.setBackground(Color.BLACK);
+        jPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 0, 5));
+
+        jPanel.add(chartArea, BorderLayout.CENTER);
+        jPanel.add(timeLine, BorderLayout.SOUTH);
+        jPanel.add(priceLine, BorderLayout.EAST);
+        jPanel.add(info, BorderLayout.NORTH);
+
+        setupMouse();
+        setupChartListener();
+    }
 
     /**
-     * ChartController constructor.
+     * Establece un buffer de datos en el gráfico. Para que cualquier cambio en el buffer sea representado gráficamente,
+     * es necesario hacer una llamada al método update.
      *
-     * @param chartView The candlestick chart view to monitor.
+     * @param buffer El buffer de datos a agregar al grafico.
      */
-    public ChartController(ChartView chartView) {
-        this.chartView = chartView;
-        CandleView candleView = new CandleView();
-        observers = new ArrayList<>();
+    public void setBuffer(Buffer buffer) {
+        this.buffer = buffer;
+        candleController.setBuffer(buffer);
+    }
 
-        // Drivers initialization.
-        candleController = new CandleController(candleView);
-        cursorController = new CursorController(chartView);
-        gridController = new GridController(chartView);
 
-        // Observer registration.
-        addObserver(candleController);
-        addObserver(cursorController);
-        addObserver(gridController);
+    /**
+     * Obtiene el buffer de datos que contiene el gráfico, con todos los valores almacenado antes de haber llamado al
+     * método update. Esto quiere decir que el buffer puede contener elementos que aún no hayan sido actualizados en
+     * el gráfico.
+     *
+     * @return El buffer de datos del grafico.
+     */
+    public Buffer getBuffer() {
+        return buffer;
+    }
 
-        // View settings.
-        chartView.add(candleView);
-        chartView.addComponentListener(new ComponentAdapter() {
+
+    /**
+     * Establece la visibilidad de la cuadrícula del gráfico. Si visibility se establece a true la cuadrícula será
+     * mostrada, o en caso de ser false, esta se ocultará.
+     *
+     * @param visibility Visibilidad de la cuadrícula.
+     */
+    public void setGridVisible(boolean visibility) {
+        grid.setVisible(visibility);
+    }
+
+
+    /**
+     * Obtiene la visibilidad de la cuadrícula del gráfico. En caso de que la cuadrícula este visible devuelve true, en
+     * caso contrario devolverá false.
+     *
+     * @return Estado de la visibilidad de la cuadrícula.
+     */
+    public boolean isGridVisible() {
+        return grid.isVisible();
+    }
+
+
+    /**
+     * Establece la visibilidad de las líneas del cursor en el gráfico. En caso de establecer visibility como true,
+     * las líneas del cursor serán mostradas en el gráfico. En caso de ser false esta no se mostrarán.
+     *
+     * @param visibility Visibilidad de las líneas del cursor.
+     */
+    public void setCursorVisible(boolean visibility) {
+        cursor.setVisible(visibility);
+    }
+
+
+    /**
+     * Obtiene la visibilidad de las líneas del cursor en el gráfico. En caso de que las líneas se muestre devuelve
+     * true, en caso contrario devuelve false.
+     *
+     * @return Visibilidad de las líneas del cursor.
+     */
+    public boolean isCursorVisible() {
+        return cursor.isVisible();
+    }
+
+
+    public void setSymbol(String symbol) {
+        info.updateInfo(0, symbol);
+    }
+
+    public String getSymbol() {
+        return info.getInfo(0);
+    }
+
+    private void setupMouse() {
+        chartArea.addMouseListener(new MouseAdapter() {
             @Override
-            public void componentResized(ComponentEvent e) {
-                super.componentResized(e);
-                updateChartSize();
-                gridController.updateGrid();
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                timeLine.setCursorVisible(false);
+                priceLine.setCursorVisible(false);
+                cursor.setCursorVisible(false);
+                info.setVisibleInfo(1, false);
+            }
+        });
+
+        chartArea.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                super.mouseMoved(e);
+                timeLine.setCursorLocation(e.getX());
+                timeLine.setCursorVisible(true);
+                priceLine.setCursorLocation(e.getY());
+                priceLine.setCursorVisible(true);
+                cursor.setCursorLocation(e.getX()-1, e.getY()-1);
+                cursor.setCursorVisible(true);
+
+                String strInfo = timeLine.getCandleFromCursor() != null? timeLine.getCandleFromCursor().toString(): "";
+                info.updateInfo(1, strInfo);
+                info.setVisibleInfo(1, true);
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                super.mouseDragged(e);
+
+                if (e.getX() > 0 && e.getY() > 0 && e.getX() < chartArea.getWidth() && e.getY() < chartArea.getHeight()) {
+                    timeLine.setCursorLocation(e.getX());
+                    timeLine.setCursorVisible(true);
+                    priceLine.setCursorLocation(e.getY());
+                    priceLine.setCursorVisible(true);
+                    cursor.setCursorLocation(e.getX()-1, e.getY()-1);
+                    cursor.setCursorVisible(true);
+
+                    String strInfo = timeLine.getCandleFromCursor() != null? timeLine.getCandleFromCursor().toString(): "";
+                    info.updateInfo(1, strInfo);
+                    info.setVisibleInfo(1, true);
+                }
             }
         });
     }
 
-    /**
-     * Adds an observer to the controller.
-     *
-     * @param observer The observer to register to receive updates.
-     */
-    public void addObserver(ChartObserver observer) {
-        observers.add(observer);
-        notifyObservers();
-    }
-
-    /**
-     * Gets a list of all observers.
-     *
-     * @return List of observers.
-     */
-    public List<ChartObserver> getObservers() {
-        return observers;
-    }
-
-    /**
-     * Removes an observer from the observer list.
-     *
-     * @param observer The observer to remove from the list.
-     */
-    public void removeObserver(ChartObserver observer) {
-        observers.remove(observer);
-    }
-
-    /**
-     * Notify all registered observers of registered observers.
-     */
-    private void notifyObservers() {
-        for(ChartObserver observer: observers) {
-            observer.updateObservers(observers);
-        }
-    }
-
-    /**
-     * Notify all observers of updated chart size.
-     */
-    private void notifyUpdateChartSize() {
-        for(ChartObserver observer: observers) {
-            observer.updateChartSize(width, height);
-        }
-    }
-
-    /**
-     * Update chart resize.
-     */
-    private void updateChartSize() {
-        this.width = chartView.getWidth();
-        this.height = chartView.getHeight();
-        notifyUpdateChartSize();
-    }
-
-    /**
-     * Sets cursor visibility.
-     *
-     * @param visibility Cursor visibility;
-     */
-    public void setCursorVisible(boolean visibility) {
-        cursorController.setGlobalCursosVisible(visibility);
-    }
-
-    /**
-     * Gets cursor visibility;
-     *
-     * @return 'true' if the cursor is visible or 'false' otherwise.
-     */
-    public boolean isCursorVisible() {
-        return cursorController.isGlobalCursosVisible();
-    }
-
-    /**
-     * Sets grid visibility.
-     *
-     * @param currentVisibility Grid visibility.
-     */
-    public  void setGridVisible(boolean currentVisibility) {
-        gridController.setGridVisible(currentVisibility);
-    }
-
-    /**
-     * Gets grid visibility.
-     *
-     * @return 'true' if the grid is visible or 'false' otherwise.
-     */
-    public boolean isGridVisible() {
-        return gridController.isGridVisible();
-    }
-
-    /**
-     * Increases the size of the candle. If this size can be increased, the number of candles per grid is reduced.
-     */
-    public void upCandleSize() {
-        if(candleController.upCandleSize()) {
-            gridController.downGridSize();
-        }
-    }
-
-    /**
-     * Reduce the size of the candle. If this size can be reduced, the number of candles per grid is increased.
-     */
-    public void downCandleSize() {
-        if(candleController.downCandleSize()) {
-            gridController.upGridSize();
-        }
-    }
-
-    /**
-     * Sets the candle buffer that will be represented on the chart.
-     *
-     * @param candleList Candle buffer.
-     */
-    public void setCandleBuffer(List<Candle> candleList) {
-        candleController.setCandleBuffer(candleList);
-    }
-
-    /**
-     * Gets the candle buffer that will be represented on the chart.
-     *
-     * @return The candle buffer.
-     */
-    public List<Candle> getCandleBuffer() {
-        return candleController.getCandleBuffer();
+    private void setupChartListener() {
+        candleView.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                priceLine.setPriceRange(candleController.getMaxPrice(), candleController.getMinPrice());
+                timeLine.setCandleList(candleView.getCandleList());
+                timeLine.setRelativePosition(candleController.getRelativePosition());
+            }
+        });
     }
 }

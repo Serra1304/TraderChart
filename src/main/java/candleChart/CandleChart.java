@@ -1,172 +1,62 @@
 package candleChart;
 
-import candleChart.controller.ChartController;
-import candleChart.controller.PriceLineController;
-import candleChart.controller.TimeLineController;
-import candleChart.controller.TitleController;
+import candleChart.controller.*;
 import candleChart.data.Buffer;
-import candleChart.view.*;
 
 import javax.swing.*;
-import java.awt.*;
-import java.util.ArrayList;
 
-/**
- * The CandleChart class acts as the main component that coordinates other controllers and views to display a candle chart.
- */
 public class CandleChart extends JPanel {
-    // Constant dimensions for the preferred size of different components.
-    public static final Dimension TITLE_SIZE = new Dimension(0, 25);
-    public static final Dimension TIME_LINE_SIZE = new Dimension(0, 40);
-    public static final Dimension PRICE_LINE_SIZE = new Dimension(70, 0);
 
-    // Views of the different components of the chart.
-    private final ChartView chartView;
-    private final PriceLineView priceLineView;
-    private final TimeLineView timeLineView;
-    private final TitleView titleView;
-
-    // Controllers associated with the views.
     private final ChartController chartController;
-    private final PriceLineController priceLineController;
-    private final TimeLineController timeLineController;
-    private final TitleController titleController;
 
-    private Buffer buffer;
-
-    /**
-     * Constructor of the CandleChart class. Initializes the views, controllers and configures the chart user interface.
-     */
     public CandleChart() {
-        // Initialize the view.
-        chartView = new ChartView();
-        priceLineView = new PriceLineView();
-        timeLineView = new TimeLineView();
-        titleView = new TitleView();
+        chartController = new ChartController(this);
+    }
 
-        // Initialize the controllers associated with the views.
-        chartController = new ChartController(chartView);
-        priceLineController = new PriceLineController(priceLineView);
-        timeLineController = new TimeLineController(timeLineView);
-        titleController = new TitleController(titleView);
-
-        // Set preferred sizes for some views.
-        priceLineView.setPreferredSize(PRICE_LINE_SIZE);
-        timeLineView.setPreferredSize(TIME_LINE_SIZE);
-        titleView.setPreferredSize(TITLE_SIZE);
-
-        // Add observers to ChartController to act in response to changes in the chart.
-        chartController.addObserver(timeLineController);
-        chartController.addObserver(priceLineController);
-        chartController.addObserver(titleController);
-
-        // Configure the appearance and layout of the main panel.
-        setLayout(new BorderLayout());
-        setDoubleBuffered(true);
-        setBackground(Color.BLACK);
-        setBorder(BorderFactory.createEmptyBorder(5, 20, 0, 0));
-
-        // Add the views to the main panel.
-        add(titleView, BorderLayout.NORTH);
-        add(timeLineView, BorderLayout.SOUTH);
-        add(priceLineView, BorderLayout.EAST);
-        add(chartView, BorderLayout.CENTER);
-
-        buffer = new Buffer();
+    public void setBuffer(Buffer buffer) {
+        chartController.setBuffer(buffer);
     }
 
     /**
-     * Set the visibility of the grid on the chart.
+     * Establece la visibilidad de la cuadrícula del gráfico. Si visibility se establece a true la cuadrícula será
+     * mostrada, o en caso de ser false, esta se ocultará.
      *
-     * @param visibility true to make the grid visible, false to hide it.
+     * @param visibility Visibilidad de la cuadrícula.
      */
-    public void setGridVisible(boolean visibility){
+    public void setGridVisible(boolean visibility) {
         chartController.setGridVisible(visibility);
     }
 
+
     /**
-     * Gets the visibility of the grid chart.
+     * Obtiene la visibilidad de la cuadrícula del gráfico. En caso de que la cuadrícula este visible devuelve true, en
+     * caso contrario devolverá false.
      *
-     * @return true if the grid is visible, false if it is hidden.
+     * @return Estado de la visibilidad de la cuadrícula.
      */
     public boolean isGridVisible() {
         return chartController.isGridVisible();
     }
 
+
     /**
-     * Set the visibility of the cursor on the chart.
+     * Establece la visibilidad de las líneas del cursor en el gráfico. En caso de establecer visibility como true,
+     * las líneas del cursor serán mostradas en el gráfico. En caso de ser false esta no se mostrarán.
      *
-     * @param visibility true to make the cursor visible, false to hide it.
+     * @param visibility Visibilidad de las líneas del cursor.
      */
     public void setCursorVisible(boolean visibility) {
         chartController.setCursorVisible(visibility);
     }
 
+
     /**
-     * Gets whether the cursor on the chart is visible.
+     * Obtiene la visibilidad de las líneas del cursor en el gráfico. En caso de que las líneas se muestre devuelve
+     * true, en caso contrario devuelve false.
      *
-     * @return true if the cursor is visible, false if it is hidden.
+     * @return Visibilidad de las líneas del cursor.
      */
     public boolean isCursorVisible() {
         return chartController.isCursorVisible();
-    }
-
-    /**
-     * Set the chart title.
-     *
-     * @param title The new title of the chart.
-     */
-    public void setTitle(String title) {
-        titleController.setChartTitle(title);
-    }
-
-    /**
-     * Get the chart title.
-     *
-     * @return The chart title.
-     */
-    public String getTitle() {
-        return titleController.getChartTitle();
-    }
-
-
-    /* Método sustituido por setBuffer y update */
-
-//    /**
-//     * Sets the set of candles to display on the chart.
-//     *
-//     * @param candleList List of candles to display on the chart.
-//     */
-//    public void setCandleBuffer(List<Candle> candleList) {
-//        chartController.setCandleBuffer(candleList);
-//    }
-
-
-    /**
-     * Establece un buffer de datos en el gráfico. Para que cualquier cambio en el buffer sea representado gráficamente,
-     * es necesario hacer una llamada al método update.
-     *
-     * @param buffer El buffer de datos a agregar al grafico.
-     */
-    public void setBuffer(Buffer buffer) {
-        this.buffer = buffer;
-    }
-
-    /**
-     * Obtiene el buffer de datos que contiene el gráfico, con todos los valores almacenado antes de haber llamado al
-     * método update. Esto quiere decir que el buffer puede contener elementos que aún no hayan sido actualizados en
-     * el gráfico.
-     *
-     * @return El buffer de datos del grafico.
-     */
-    public Buffer getBuffer() {
-        return buffer;
-    }
-
-    /**
-     * Método que actualiza los datos del buffer en el gráfico.
-     */
-    public void update() {
-        chartController.setCandleBuffer(new ArrayList<>(buffer.getAll()));
     }
 }

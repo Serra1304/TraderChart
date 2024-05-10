@@ -8,64 +8,70 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The CandleView class represents a view that displays a series of candles on a chart.
- * Each candlestick is represented as a line and a rectangle, where the line connects the highest and lowest prices,
- * and the rectangle represents the difference between the opening and closing prices.
- * The color of the candle depends on whether the opening price is higher or lower than the closing price, being green
- * if the closing price is higher than the opening price and red if the closing price is lower than the opening price.
+ * La clase CandleView representa una vista que muestra una serie de velas en un gráfico.
+ * Cada vela se representa como una línea y un rectángulo, donde la línea conecta los precios más altos y más bajo,
+ * y el rectángulo representa la diferencia entre los precios de apertura y cierre. El color de la vela depende de si
+ * el precio de apertura es mayor o menor que el precio de cierre, siendo verde si el precio de cierre es mayor que el
+ * precio de apertura y rojo si el precio de cierre es menor que el precio de apertura.
  */
 public class CandleView extends JPanel {
     private List<Candle> candleList;
 
     private int candleWidth;
     private int relativePosition;
-    private double maxPrice, minPrice;
+    private double rangeUp, rangeDown;
+
 
     /**
-     * Constructor of the CandleView class.
+     * Constructor de la clase CandleView.
+     * Crea una nueva instancia de CandleView con valores predeterminados para las propiedades.
      */
     public CandleView() {
         candleList = new ArrayList<>();
-        candleWidth = 0;
-        relativePosition = 0;
-        maxPrice = 0;
-        minPrice = 0;
+        candleWidth = 5;
+        relativePosition = 1;
+        rangeUp = 0;
+        rangeDown = 0;
 
         setOpaque(false);
     }
 
+
     /**
-     * Method in charge of drawing the candles on the chart.
+     * Sobrescribe el método paintComponent para dibujar las velas en un gráfico.
+     * Este método se llama automáticamente cuando el componente necesita ser repintado.
      *
-     * @param g The Graphics object used for drawing.
+     * @param g El contexto gráfico en el que dibujar las velas.
      */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
         if(!candleList.isEmpty()) {
-            for (int i = 0; i < candleList.size(); i++) {
-                // Paint the line
+            // Itera sobre la lista en orden inverso para dibujar las velas más recientes al final.
+            for (int i = candleList.size() -1; i >= 0; i--) {
+                // Se dibuja las lineas de las velas.
                 g.setColor(candleList.get(i).openPrice() > candleList.get(i).closePrice() ? new Color(127, 0, 0) : new Color(0, 127, 0));
-                g.drawLine(positionXOfCandle(i), positionYOfPrice(candleList.get(i).highPrice()),
-                           positionXOfCandle(i), positionYOfPrice(candleList.get(i).lowPrice()));
+                g.drawLine(positionOfCandle(i), positionOfPrice(candleList.get(i).highPrice()),
+                           positionOfCandle(i), positionOfPrice(candleList.get(i).lowPrice()));
 
-                // Paint the rectangle
+                // Se dibuja el rectángulo de las velas.
                 double maxOpenOrClose = Math.max(candleList.get(i).openPrice(), candleList.get(i).closePrice());
                 double minOpenOrClose = Math.min(candleList.get(i).openPrice(), candleList.get(i).closePrice());
-                int rectY = positionYOfPrice(maxOpenOrClose);
-                int rectHeight = positionYOfPrice(minOpenOrClose) - rectY;
-                g.drawRect(positionXOfCandle(i) - (candleWidth / 2), rectY, candleWidth, rectHeight);
+                int rectY = positionOfPrice(maxOpenOrClose);
+                int rectHeight = positionOfPrice(minOpenOrClose) - rectY;
+                g.drawRect(positionOfCandle(i) - (candleWidth / 2) , rectY, candleWidth - 1, rectHeight);
                 g.setColor(candleList.get(i).openPrice() > candleList.get(i).closePrice() ? new Color(255, 0, 0) : new Color(0, 255, 0));
-                g.fillRect(positionXOfCandle(i) - (candleWidth / 2), rectY, candleWidth, rectHeight);
+                g.fillRect(positionOfCandle(i) - (candleWidth / 2) + 1, rectY, candleWidth - 2, rectHeight);
             }
         }
     }
 
+
     /**
-     * Sets the list of candles to display on the chart.
+     * Establece la lista de velas que será representada en la vista.
      *
-     * @param candleList The list of candles.
+     * @param candleList Lista de velas a representar.
      */
     public void setCandleList(List<Candle> candleList) {
         if(candleList != null) {
@@ -74,106 +80,112 @@ public class CandleView extends JPanel {
         }
     }
 
+
     /**
-     * Gets the list of candles to display on the chart.
+     * Obtiene la lista de velas representadas en la vista del gráfico.
      *
-     * @return The list of candles.
+     * @return La lista de velas.
      */
     public List<Candle> getCandleList() {
         return candleList;
     }
 
+
     /**
-     * Set the width of the candles in pixels.
+     * Establece el ancho de las velas representadas en el gráfico.
      *
-     * @param candleWidth The width of the candles.
+     * @param candleWidth Anchura de vela a representar en el gráfico.
      */
     public void setCandleWidth(int candleWidth) {
         this.candleWidth = candleWidth;
         repaint();
     }
 
+
     /**
-     * Gets the width of the candles in pixels.
+     * Obtiene el ancho de las velas representadas en el gráfico.
      *
-     * @return The width of the candles.
+     * @return El ancho de las velas.
      */
     public int getCandleWidth() {
         return candleWidth;
     }
 
+
     /**
-     * Sets the relative position of the candles on the chart.
+     * Establece la posición relativa de las velas. Esta posición determina la distancia que existe entre el principio
+     * de una vela, asta el principio de la siguiente. Este valor es utilizado para la representación gráfica de las
+     * velas en el eje X.
      *
-     * @param relativePosition The relative position.
+     * @param relativePosition Posición relativa de las velas.
      */
     public void setRelativePosition(int relativePosition) {
         this.relativePosition = relativePosition;
         repaint();
     }
 
+
     /**
-     * Gets the relative position of the candles on the chart.
+     * Obtiene la posición relativa de las velas representada en el gráfico.
      *
-     * @return The relative position.
+     * @return Posición relativa de las velas.
      */
     public int getRelativePosition() {
         return relativePosition;
     }
 
-    /**
-     * Set the maximum price on the chart.
-     *
-     * @param maxPrice The maximum price.
-     */
-    public void setMaxPrice(double maxPrice) {
-        this.maxPrice = maxPrice;
-    }
 
     /**
-     * Gets the maximum price on the chart.
+     * Establece el rango de precios que será representado en el gráfico.
      *
-     * @return The maximum price.
+     * @param rangeUp Precio del rango superior.
+     * @param rangeDown Precio del rango inferior.
      */
-    public double getMaxPrice() {
-        return maxPrice;
+    public void setPriceRange(double rangeUp, double rangeDown) {
+        this.rangeUp = rangeUp;
+        this.rangeDown = rangeDown;
+        repaint();
     }
 
-    /**
-     * Set the minimum price on the chart.
-     *
-     * @param minPrice The minimum price.
-     */
-    public void setMinPrice(double minPrice) {
-        this.minPrice = minPrice;
-    }
 
     /**
-     * Get the minimum price on the chart.
+     * Obtiene el rango de precio superior representado en el gráfico.
      *
-     * @return The minimum price.
+     * @return El precio del rango superior.
      */
-    public double getMinPrice() {
-        return minPrice;
+    public double getRangeUp() {
+        return rangeUp;
     }
 
-    /**
-     * Calculates the position in pixels on the X axis of the candle whose index is provided.
-     *
-     * @param index Candle index.
-     * @return The position in pixels on the X axis.
-     */
-    private int positionXOfCandle(int index) {
-        return ((getWidth()/relativePosition) - index) * relativePosition - 1;
-    }
 
     /**
-     * Calculates the position in pixel on the Y axis of the provided price.
+     * Obtiene el rango de precio inferior representado en el gráfico.
      *
-     * @param price Price for calculation.
-     * @return The position in pixels on the Y axis.
+     * @return El precio del rango inferior.
      */
-    private int positionYOfPrice(double price) {
-        return (int) ((maxPrice - price) / ((maxPrice - minPrice) / getHeight()));
+    public double getRangeDown() {
+        return rangeDown;
+    }
+
+
+    /**
+     * Calcula la posición en píxeles en el eje X del índice de vela proporcionado.
+     *
+     * @param index Índice de vela para calcular su posición.
+     * @return Posición en pixel en el eje X.
+     */
+    private int positionOfCandle(int index) {
+        return index * relativePosition -1;
+    }
+
+
+    /**
+     * Calcula la posición en píxeles en el eje Y del precio proporcionado.
+     *
+     * @param price Precio de vela para calcular su posición.
+     * @return Posición en pixel en el eje Y.
+     */
+    private int positionOfPrice(double price) {
+        return (int) ((rangeUp - price) / ((rangeUp - rangeDown) / getHeight()));
     }
 }
