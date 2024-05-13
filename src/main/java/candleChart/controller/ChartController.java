@@ -135,7 +135,7 @@ public class ChartController {
                 timeLine.setCursorVisible(false);
                 priceLine.setCursorVisible(false);
                 cursor.setCursorVisible(false);
-                info.setVisibleInfo(1, false);
+                info.setVisibilityInfo(1, false);
             }
         });
 
@@ -152,7 +152,7 @@ public class ChartController {
 
                 String strInfo = timeLine.getCandleFromCursor() != null? timeLine.getCandleFromCursor().toString(): "";
                 info.updateInfo(1, strInfo);
-                info.setVisibleInfo(1, true);
+                info.setVisibilityInfo(1, true);
             }
 
             @Override
@@ -169,7 +169,7 @@ public class ChartController {
 
                     String strInfo = timeLine.getCandleFromCursor() != null? timeLine.getCandleFromCursor().toString(): "";
                     info.updateInfo(1, strInfo);
-                    info.setVisibleInfo(1, true);
+                    info.setVisibilityInfo(1, true);
                 }
             }
         });
