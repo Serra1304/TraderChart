@@ -1,41 +1,49 @@
 package candleChart.model;
 
-import java.time.LocalDate;
+
+import candleChart.exceptions.InvalidCandleException;
+
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+
 /**
- * Class that represents a candle on a financial chart.
- *
- * @param dateTime Date and time associated with the candle.
- * @param openPrice Opening price of the candle.
- * @param highPrice Highest price of the candle.
- * @param lowPrice Lowest price of the candle.
- * @param closePrice Closing price of the candle.
+ * Representa una vela individual en un gráfico de velas, que representa visualmente el movimiento del precio de un
+ * valor durante un período de tiempo específico.
  */
 public record Candle(LocalDateTime dateTime, double openPrice, double highPrice, double lowPrice, double closePrice) {
 
-
     /**
-     * Gets the date associated with the candle.
+     * Valída los parámetros proporcionados y crea un nuevo objeto `Candle`.
      *
-     * @return The date of the candle.
+     * @throws InvalidCandleException si la fecha y hora es nula o los precios violan las siguientes condiciones:
+     *                              - Todos los precios deben positivos.
+     *                              - El precio alto debe ser mayor que los demás precios de la vela.
+     *                              - El precio de apertura debe estar entre el precio alto y bajo (inclusive).
+     *                              - El precio de cierre debe estar entre el precio alto y bajo (inclusive).
+     *                              - El precio bajo debe ser menor que los demás precios de la vela.
      */
-    public LocalDate getDate() {
-        return dateTime.toLocalDate();
+    public Candle {
+        if (dateTime == null) {
+            throw new InvalidCandleException("No se puede pasar una fecha nula como parámetro");
+        }
+        if (openPrice < 0 || highPrice < 0 || lowPrice < 0 || closePrice < 0) {
+            throw new InvalidCandleException("No pueden haber precios negativos");
+        }
+        if (highPrice < lowPrice || openPrice > highPrice || openPrice < lowPrice || closePrice > highPrice || closePrice < lowPrice) {
+            throw new InvalidCandleException("Formato de precios incorrecto");
+        }
+
+        // Las asignaciones de campos se manejan automáticamente por el constructor de registro en Java 17.
     }
 
+
     /**
-     * Gets the time associated with the candle.
+     * Devuelve una representación de cadena de la vela en un formato legible por humanos, incluyendo precios de
+     * apertura, máximo, mínimo, cierre y fecha/hora.
      *
-     * @return The time of the candle.
+     * @return Una cadena formateada que representa los datos de la vela.
      */
-    public LocalTime getTime() {
-        return dateTime.toLocalTime();
-    }
-
-
     @Override
     public String toString() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("u.M.dd HH:mm");  // Formato de fecha a mostrar.
