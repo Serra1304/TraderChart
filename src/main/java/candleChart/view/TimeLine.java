@@ -34,7 +34,7 @@ public class TimeLine extends JPanel {
      */
     public TimeLine() {
         cursorLocationX = 0;
-        relativePosition = 0;
+        relativePosition = 1;
         candleList = new ArrayList<>();
 
         currentTime = new JLabel();
@@ -62,10 +62,6 @@ public class TimeLine extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Se actualiza fecha de las divisiones y fecha actual a la que apunta el puntero del ratón.
-        updateChartDate();
-        updateCurrentDate();
-
         // Se pinta divisiones
         g.setColor(Color.GRAY);
         for (int x = 0; x < getWidth() - 70; x += 64) {
@@ -75,7 +71,6 @@ public class TimeLine extends JPanel {
         // Se pinta posición del cursor.
         if (currentTime.isVisible()) {
             g.drawLine(cursorLocationX, 0, cursorLocationX, DIVIDER_HEIGHT);
-
         }
     }
 
@@ -92,6 +87,7 @@ public class TimeLine extends JPanel {
 
         this.cursorLocationX = cursorLocationX;
         repaint();
+        updateCurrentDate();
     }
 
 
@@ -134,10 +130,17 @@ public class TimeLine extends JPanel {
      * tiempo.
      *
      * @param candleList Lista de velas del gráfico.
+     *
+     * @throws NullPointerException Si la lista de velas proporcionada es nula.
      */
     public void setCandleList(List<Candle> candleList) {
+        if(candleList == null) {
+            throw new NullPointerException("No se permiten valores nulos para 'candleList'");
+        }
+
         this.candleList = candleList;
         repaint();
+        updateChartDate();
     }
 
 
@@ -157,9 +160,16 @@ public class TimeLine extends JPanel {
      * encuentra ubicado el cursor del ratón.
      *
      * @param relativePosition Posición relativa de las velas.
+     *
+     * @throws IllegalArgumentException Si el valor proporcionado es igual o inferior a 0.
      */
     public void setRelativePosition(int relativePosition) {
+        if(relativePosition <= 0) {
+            throw new IllegalArgumentException("No se permiten valores inferiores o iguales a 0");
+        }
+
         this.relativePosition = relativePosition;
+        repaint();
     }
 
 
@@ -183,22 +193,19 @@ public class TimeLine extends JPanel {
      * Método que actualiza los valores de las fechas de la línea de tiempo.
      */
     private void updateChartDate() {
-        // Añade nuevas etiquetas al componente en caso de ser necesario.
-        if(getComponentCount() <= (getWidth()-71)/64+1) {
-            for(int i = getComponentCount(); i <= (getWidth()-71)/64+1; i++) {
-                JLabel label = new JLabel();
-                label.setForeground(Color.GRAY);
-                label.setSize(62, 30);
-                label.setOpaque(false);
-                add(label);
-            }
+        int numLabels = (getWidth() - 71) / 64 + 1;
+
+        // Agrega o elimina etiquetas de las divisiones según sea necesario.
+        while (getComponentCount() > numLabels +1) {
+            remove(getComponentCount() -1);
         }
 
-        // Elimina etiquetas del componente en caso de ser necesario.
-        if(getComponentCount() > (getWidth()-71)/64 +2) {
-            for(int i = getComponentCount(); i > (getWidth()-71)/64 +2; i--) {
-                remove(i -1);
-            }
+        while (getComponentCount() <= numLabels) {
+            JLabel label = new JLabel();
+            label.setForeground(Color.GRAY);
+            label.setSize(62, 30);
+            label.setOpaque(false);
+            add(label);
         }
 
         // Actualiza los valores de las fechas de las etiquetas.
@@ -240,4 +247,3 @@ public class TimeLine extends JPanel {
         }
     }
 }
-

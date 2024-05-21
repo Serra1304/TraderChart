@@ -36,7 +36,7 @@ public class PriceLine extends JPanel {
         currentPrice.setHorizontalAlignment(SwingConstants.CENTER);
         currentPrice.setOpaque(true);
         currentPrice.setVisible(false);
-        currentPrice.setSize(60, 15);
+        currentPrice.setSize(PRICE_TAG_WIDTH, PRICE_TAG_HEIGHT);
 
         setPreferredSize(new Dimension(70, 0));
         setBackground(Color.BLACK);
@@ -66,9 +66,6 @@ public class PriceLine extends JPanel {
         if(currentPrice.isVisible()) {
             g.drawLine(0, cursorLocationY, 5, cursorLocationY);
         }
-
-        // Actualización de los precios de las divisiones del gráfico.
-        updateChartPrices();
     }
 
 
@@ -78,7 +75,15 @@ public class PriceLine extends JPanel {
      * @param locationY Posición del cursor en el eje Y.
      */
     public void setCursorLocation(int locationY) {
-        int positionY = locationY < PRICE_TAG_HEIGHT/2? 0: locationY - PRICE_TAG_HEIGHT/2;
+        int positionY;
+
+        if(locationY < PRICE_TAG_HEIGHT / 2) {
+            positionY = 0;
+        } else if (locationY >= getHeight() - PRICE_TAG_HEIGHT / 2) {
+            positionY = getHeight() - PRICE_TAG_HEIGHT;
+        } else {
+            positionY = locationY - PRICE_TAG_HEIGHT / 2;
+        }
         currentPrice.setLocation(5, positionY);
 
         this.cursorLocationY = locationY;
@@ -124,8 +129,14 @@ public class PriceLine extends JPanel {
      *
      * @param rangeUp Rango superior del precio.
      * @param rangeDown Rango inferior del precio.
+     *
+     * @throws IllegalArgumentException Si el precio del rango superior es inferior al precio del rango inferior.
      */
     public void setPriceRange(double rangeUp, double rangeDown) {
+        if (rangeUp < rangeDown) {
+            throw new IllegalArgumentException("El rango superior no puede ser menos que el rango inferior.");
+        }
+
         this.rangeUp = rangeUp;
         this.rangeDown = rangeDown;
         updateChartPrices();
@@ -157,23 +168,19 @@ public class PriceLine extends JPanel {
      */
     private void updateChartPrices() {
         double pricePixel = (rangeUp - rangeDown) / getHeight();
+        int requiredLabels = getHeight() / SIZE_GRID;
 
-        // Añade nuevas etiquetas al componente en caso de ser necesario.
-        if(getComponentCount() <= (getHeight()) / SIZE_GRID) {
-            for(int i = getComponentCount(); i <= getHeight() / SIZE_GRID; i++) {
-                JLabel label = new JLabel();
-                label.setForeground(Color.GRAY);
-                label.setSize(PRICE_TAG_WIDTH, PRICE_TAG_HEIGHT);
-                label.setOpaque(false);
-                add(label);
-            }
+        // Agrega o elimina etiquetas de las divisiones según sea necesario.
+        while (getComponentCount() > requiredLabels) {
+            remove(getComponentCount() - 1);
         }
 
-        // Elimina etiquetas del componente en caso de ser necesario.
-        if(getComponentCount() > getHeight() / SIZE_GRID) {
-            for(int i = getComponentCount(); i > getHeight() / SIZE_GRID +1; i--) {
-                remove(i -1);
-            }
+        while (getComponentCount() <= requiredLabels) {
+            JLabel label = new JLabel();
+            label.setForeground(Color.GRAY);
+            label.setSize(PRICE_TAG_WIDTH, PRICE_TAG_HEIGHT);
+            label.setOpaque(false);
+            add(label);
         }
 
         // Actualiza el valor de las etiquetas de las divisiones de la línea de precios.
