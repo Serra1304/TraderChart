@@ -1,5 +1,6 @@
 package candleChart.view;
 
+import candleChart.controller.CandleSize;
 import candleChart.model.Candle;
 
 import javax.swing.*;
@@ -17,8 +18,7 @@ import java.util.List;
 public class CandleView extends JPanel {
     private List<Candle> candleList;
 
-    private int candleWidth;
-    private int relativePosition;
+    private CandleSize candleSize;
     private double rangeUp, rangeDown;
 
 
@@ -28,8 +28,7 @@ public class CandleView extends JPanel {
      */
     public CandleView() {
         candleList = new ArrayList<>();
-        candleWidth = 5;
-        relativePosition = 1;
+        candleSize = CandleSize.SMALL;
         rangeUp = 0;
         rangeDown = 0;
 
@@ -48,6 +47,7 @@ public class CandleView extends JPanel {
         super.paintComponent(g);
 
         if(!candleList.isEmpty()) {
+            int candleWidth = candleSize.getCandleWidth();
             // Itera sobre la lista en orden inverso para dibujar las velas más recientes al final.
             for (int i = candleList.size() -1; i >= 0; i--) {
                 // Se dibuja las lineas de las velas.
@@ -89,49 +89,14 @@ public class CandleView extends JPanel {
     public List<Candle> getCandleList() {
         return candleList;
     }
+    
 
-
-    /**
-     * Establece el ancho de las velas representadas en el gráfico.
-     *
-     * @param candleWidth Anchura de vela a representar en el gráfico.
-     */
-    public void setCandleWidth(int candleWidth) {
-        this.candleWidth = candleWidth;
-        repaint();
+    public void setCandleSize(CandleSize candleSize) {
+        this.candleSize = candleSize;
     }
 
-
-    /**
-     * Obtiene el ancho de las velas representadas en el gráfico.
-     *
-     * @return El ancho de las velas.
-     */
-    public int getCandleWidth() {
-        return candleWidth;
-    }
-
-
-    /**
-     * Establece la posición relativa de las velas. Esta posición determina la distancia que existe entre el principio
-     * de una vela, asta el principio de la siguiente. Este valor es utilizado para la representación gráfica de las
-     * velas en el eje X.
-     *
-     * @param relativePosition Posición relativa de las velas.
-     */
-    public void setRelativePosition(int relativePosition) {
-        this.relativePosition = relativePosition;
-        repaint();
-    }
-
-
-    /**
-     * Obtiene la posición relativa de las velas representada en el gráfico.
-     *
-     * @return Posición relativa de las velas.
-     */
-    public int getRelativePosition() {
-        return relativePosition;
+    public CandleSize getCandleSize() {
+        return candleSize;
     }
 
 
@@ -175,6 +140,7 @@ public class CandleView extends JPanel {
      * @return Posición en pixel en el eje X.
      */
     private int positionOfCandle(int index) {
+        int relativePosition = candleSize.getRelativePosition();
         return index * relativePosition -1;
     }
 

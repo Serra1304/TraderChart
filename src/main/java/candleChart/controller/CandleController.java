@@ -19,15 +19,15 @@ public class CandleController {
     private List<Candle> candleList;
 
     private double maxPrice, minPrice;
-    private final int relativePosition;
+
+    private CandleSize candleSize;
 
     public CandleController(CandleView candleView) {
         this.candleView = candleView;
 
-        setupView();
-        relativePosition = 32 / 4;
-
+        candleSize = CandleSize.SMALL;
         buffer = new Buffer();
+        setupView();
     }
 
     /**
@@ -66,8 +66,12 @@ public class CandleController {
         return minPrice;
     }
 
-    public int getRelativePosition() {
-        return relativePosition;
+    public void setCandleSize(CandleSize candleSize) {
+        this.candleSize = candleSize;
+    }
+
+    public CandleSize getCandleSize() {
+        return candleSize;
     }
 
     private void setupView() {
@@ -76,20 +80,19 @@ public class CandleController {
             public void componentResized(ComponentEvent e) {
                 updateCandleView();
 
-                candleView.setRelativePosition(relativePosition);
+                candleView.setCandleSize(candleSize);
             }
         });
     }
 
     private void updateCandleView() {
-//        candlesNumber = candleView.getWidth() / relativePosition;
         updateCandleList();
         updatePriceRange();
 
     }
 
     private void updateCandleList() {
-        int numVelas = Math.max(candleView.getWidth() / relativePosition, 0);
+        int numVelas = Math.max(candleView.getWidth() / candleSize.getRelativePosition(), 0);
         int candleLast = buffer.size() -1;
         int candleFirst = Math.max(candleLast - numVelas, 0);
 

@@ -1,15 +1,12 @@
 package candleChart.view;
 
+import candleChart.controller.CandleSize;
 import candleChart.model.Candle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -84,26 +81,26 @@ public class TimeLineTest {
     }
 
     @Test
-    public void testSetRelativePosition_ParameterLessThanOrEqualToZero() {
-        IllegalArgumentException exception;
-        exception = assertThrows(IllegalArgumentException.class, () -> {
-            timeLine.setRelativePosition(0);
+    public void testSetCandleSize_NullCandleSize() {
+        NullPointerException exception;
+        exception = assertThrows(NullPointerException.class, () -> {
+            timeLine.setCandleSize(null);
         });
-        assertEquals("No se permiten valores inferiores o iguales a 0", exception.getMessage());
+        assertEquals("No se permiten valores nulos", exception.getMessage());
     }
 
     @Test
-    public void testSetRelativePosition_TriggerRepaint() {
+    public void testSetCandleSize_TriggerRepaint() {
         timeLine = spy(new TimeLine());
-        timeLine.setRelativePosition(10);
+        timeLine.setCandleSize(CandleSize.SMALL);
 
         verify(timeLine, atLeastOnce()).repaint();
     }
 
     @Test
-    public void testSetRelativePosition_ValidRelativePosition() {
-        timeLine.setRelativePosition(40);
+    public void testSetRelativePosition_ValidCandleSize() {
+        timeLine.setCandleSize(CandleSize.LARGE);
 
-        assertEquals(40, timeLine.getRelativePosition());
+        assertEquals(CandleSize.LARGE, timeLine.getCandleSize());
     }
 }

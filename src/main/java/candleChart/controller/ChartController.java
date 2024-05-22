@@ -118,6 +118,15 @@ public class ChartController {
         return cursor.isVisible();
     }
 
+    public void setCandleSize(CandleSize candleSize) {
+        candleController.setCandleSize(candleSize);
+        timeLine.setCandleSize(candleSize);
+    }
+
+    public CandleSize getCandleSize() {
+        return candleController.getCandleSize();
+    }
+
 
     public void setSymbol(String symbol) {
         info.updateInfo(0, symbol);
@@ -181,7 +190,7 @@ public class ChartController {
             public void componentResized(ComponentEvent e) {
                 priceLine.setPriceRange(candleController.getMaxPrice(), candleController.getMinPrice());
                 timeLine.setCandleList(candleView.getCandleList());
-                timeLine.setRelativePosition(candleController.getRelativePosition());
+                timeLine.setCandleSize(candleController.getCandleSize());
             }
         });
     }

@@ -5,12 +5,13 @@ import candleChart.data.Buffer;
 
 import javax.swing.*;
 
-public class CandleChart extends JPanel {
+public class TraderChart extends JPanel {
 
     private final ChartController chartController;
 
-    public CandleChart() {
+    public TraderChart() {
         chartController = new ChartController(this);
+        //chartController.setSize(CandleSize.VERY_SMALL);
     }
 
     public void setBuffer(Buffer buffer) {
@@ -58,5 +59,13 @@ public class CandleChart extends JPanel {
      */
     public boolean isCursorVisible() {
         return chartController.isCursorVisible();
+    }
+
+    public void setCandleSize(CandleSize candleSize) {
+        chartController.setCandleSize(candleSize);
+    }
+    
+    public CandleSize getCandleSize() {
+        return chartController.getCandleSize();
     }
 }

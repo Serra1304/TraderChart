@@ -1,5 +1,6 @@
 package candleChart.view;
 
+import candleChart.controller.CandleSize;
 import candleChart.model.Candle;
 
 import javax.swing.*;
@@ -16,16 +17,17 @@ import java.util.List;
  */
 public class TimeLine extends JPanel {
     private static final int DIVIDER_HEIGHT = 4;
+    private static final int DIVIDER_SIZE = 64;
     private static final int CURRENT_TIME_WIDTH = 100;
     private static final int CURRENT_TIME_HEIGHT = 15;
     private static final int CURRENT_TIME_LOCATION_X = 0;
     private static final int CURRENT_TIME_LOCATION_Y = 5;
 
     private int cursorLocationX;
-    private int relativePosition;
     private final JLabel currentTime;
     private List<Candle> candleList;
     private Candle candleFromCursor;
+    private CandleSize candleSize;
 
 
     /**
@@ -33,8 +35,8 @@ public class TimeLine extends JPanel {
      * Crea una nueva instancia de TimeLine con valores predeterminados para las propiedades.
      */
     public TimeLine() {
+        candleSize = CandleSize.SMALL;
         cursorLocationX = 0;
-        relativePosition = 1;
         candleList = new ArrayList<>();
 
         currentTime = new JLabel();
@@ -64,7 +66,7 @@ public class TimeLine extends JPanel {
 
         // Se pinta divisiones
         g.setColor(Color.GRAY);
-        for (int x = 0; x < getWidth() - 70; x += 64) {
+        for (int x = 0; x < getWidth() - 70; x += DIVIDER_SIZE) {
             g.drawLine(x, 0, x, DIVIDER_HEIGHT);
         }
 
@@ -155,32 +157,32 @@ public class TimeLine extends JPanel {
 
 
     /**
-     * Establece la posición relativa de las velas. Este valor indica la distancia existente entre el principio de una
-     * vela y el principio de la siguiente. Este valor es utilizado para la obtención de la vela en la cual se
+     * Establece la propiedad CandleSize. Esta propieda proporciona informacion relativa a la vela, como tamaño y
+     * posición relativa de la misma. Este objeto es utilizado para la obtención de la vela en la cual se
      * encuentra ubicado el cursor del ratón.
      *
-     * @param relativePosition Posición relativa de las velas.
+     * @param candleSize Objeto de tipo CandleSize que proporciona tamaño y posición relativa de la vela.
      *
-     * @throws IllegalArgumentException Si el valor proporcionado es igual o inferior a 0.
+     * @throws NullPointerException Si el valor proporcionado es nulo..
      */
-    public void setRelativePosition(int relativePosition) {
-        if(relativePosition <= 0) {
-            throw new IllegalArgumentException("No se permiten valores inferiores o iguales a 0");
+    public void setCandleSize(CandleSize candleSize) {
+        if(candleSize == null) {
+            throw new NullPointerException("No se permiten valores nulos");
         }
 
-        this.relativePosition = relativePosition;
+        this.candleSize = candleSize;
         repaint();
     }
 
 
     /**
-     * Obtiene la posición relativa de las velas. Este valor indica la distancia existente entre el principio de una
-     * vela y el principio de la siguiente.
+     * Obtiene un objeto de tipo CandleSize. Este objeto proporciona información de la vela, como tamaño y posición
+     * relativa de la misma.
      *
-     * @return Posición relativa de las velas.
+     * @return Objeto de tipo CandleSize.
      */
-    public int getRelativePosition() {
-        return relativePosition;
+    public CandleSize getCandleSize() {
+        return candleSize;
     }
 
 
@@ -193,7 +195,7 @@ public class TimeLine extends JPanel {
      * Método que actualiza los valores de las fechas de la línea de tiempo.
      */
     private void updateChartDate() {
-        int numLabels = (getWidth() - 71) / 64 + 1;
+        int numLabels = (getWidth() - 71) / DIVIDER_SIZE + 1;
 
         // Agrega o elimina etiquetas de las divisiones según sea necesario.
         while (getComponentCount() > numLabels +1) {
@@ -210,13 +212,14 @@ public class TimeLine extends JPanel {
 
         // Actualiza los valores de las fechas de las etiquetas.
         for(int i = 1; i < getComponentCount(); i++) {
-            int indexCandleTime = i * 8 - 8;
+            int relativePosition = candleSize.getRelativePosition();
+            int indexCandleTime = i * (DIVIDER_SIZE / relativePosition) - (DIVIDER_SIZE / relativePosition);
             if(candleList.size() > indexCandleTime) {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM HH:mm");
                 String formattedDateTime = candleList.get(indexCandleTime).dateTime().format(formatter);
 
                 JLabel label = (JLabel) getComponent(i);
-                label.setLocation(i * 64 - 64, 5);
+                label.setLocation(i * DIVIDER_SIZE - DIVIDER_SIZE, 5);
                 label.setText("<html>" + formattedDateTime + "</html>");
             }
         }
@@ -227,6 +230,7 @@ public class TimeLine extends JPanel {
      * Método que actualiza el valor de la etiqueta que representa el valor en el cual se encuentra el cursor del ratón.
      */
     private void updateCurrentDate() {
+        int relativePosition = candleSize.getRelativePosition();
         int indexCandleTime = (cursorLocationX + relativePosition / 2) / relativePosition;  // Vela a la que apunta el cursor.
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM HH:mm");  // Formato de fecha a mostrar.
         JLabel label = (JLabel) getComponent(0);    // Etiqueta que muestra la fecha de la vela a la que apunta el cursor.
