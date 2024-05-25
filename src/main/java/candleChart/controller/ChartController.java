@@ -128,6 +128,22 @@ public class ChartController {
     }
 
 
+    public void advance() {
+        candleController.advance();
+    }
+
+    public void advance(int steps) {
+        candleController.advance(steps);
+    }
+
+    public void retrieve() {
+        candleController.retrieve();
+    }
+
+    public void retrieve(int steps) {
+        candleController.retrieve(steps);
+    }
+
     public void setSymbol(String symbol) {
         info.updateInfo(0, symbol);
     }

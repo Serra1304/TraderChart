@@ -68,4 +68,20 @@ public class TraderChart extends JPanel {
     public CandleSize getCandleSize() {
         return chartController.getCandleSize();
     }
+
+    public void advance() {
+        chartController.advance();
+    }
+
+    public void advance(int steps) {
+        chartController.advance(steps);
+    }
+
+    public void retrieve() {
+        chartController.retrieve();
+    }
+
+    public void retrieve(int steps) {
+        chartController.retrieve(steps);
+    }
 }

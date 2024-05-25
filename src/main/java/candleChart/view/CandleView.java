@@ -74,10 +74,12 @@ public class CandleView extends JPanel {
      * @param candleList Lista de velas a representar.
      */
     public void setCandleList(List<Candle> candleList) {
-        if(candleList != null) {
-            this.candleList = candleList;
-            repaint();
+        if(candleList == null) {
+            throw new NullPointerException("No se permiten valores nulos");
         }
+
+        this.candleList = candleList;
+        repaint();
     }
 
 
@@ -89,12 +91,28 @@ public class CandleView extends JPanel {
     public List<Candle> getCandleList() {
         return candleList;
     }
-    
 
+
+    /**
+     * Establece un objeto de tipo CandleSize el cual contiene la posición relativa y tamaño de la vela.
+     *
+     * @param candleSize Objeto de tipo CandleSize ha establecer.
+     */
     public void setCandleSize(CandleSize candleSize) {
+        if(candleSize == null) {
+            throw new NullPointerException("No se permiten valores nulos para 'candleSize'.");
+        }
+
         this.candleSize = candleSize;
+        repaint();
     }
 
+
+    /**
+     * Obtiene un objeto de tipo CandleSize que contiene posición relativa y tamaño de la vela.
+     *
+     * @return Objeto de tipo CandleSize.
+     */
     public CandleSize getCandleSize() {
         return candleSize;
     }
@@ -107,6 +125,10 @@ public class CandleView extends JPanel {
      * @param rangeDown Precio del rango inferior.
      */
     public void setPriceRange(double rangeUp, double rangeDown) {
+        if (rangeUp < rangeDown) {
+            throw new IllegalArgumentException("El rango superior no puede ser menos que el rango inferior.");
+        }
+
         this.rangeUp = rangeUp;
         this.rangeDown = rangeDown;
         repaint();

@@ -21,10 +21,12 @@ public class CandleController {
     private double maxPrice, minPrice;
 
     private CandleSize candleSize;
+    private int candlePosition;
 
     public CandleController(CandleView candleView) {
         this.candleView = candleView;
 
+        candlePosition = 0;
         candleSize = CandleSize.SMALL;
         buffer = new Buffer();
         setupView();
@@ -68,10 +70,32 @@ public class CandleController {
 
     public void setCandleSize(CandleSize candleSize) {
         this.candleSize = candleSize;
+        candleView.setCandleSize(candleSize);
+        updateCandleView();
     }
 
     public CandleSize getCandleSize() {
         return candleSize;
+    }
+
+    public void advance() {
+        candlePosition--;
+        updateCandleView();
+    }
+
+    public void advance(int steps) {
+        candlePosition -= steps;
+        updateCandleView();
+    }
+
+    public void retrieve() {
+        candlePosition++;
+        updateCandleView();
+    }
+
+    public void retrieve(int steps) {
+        candlePosition += steps;
+        updateCandleView();
     }
 
     private void setupView() {
@@ -93,9 +117,8 @@ public class CandleController {
 
     private void updateCandleList() {
         int numVelas = Math.max(candleView.getWidth() / candleSize.getRelativePosition(), 0);
-        int candleLast = buffer.size() -1;
+        int candleLast = buffer.size() -1 - candlePosition;
         int candleFirst = Math.max(candleLast - numVelas, 0);
-
 
         List<Candle> candleList = buffer.getAll().subList(candleFirst, candleLast);
         this.candleList = candleList;
