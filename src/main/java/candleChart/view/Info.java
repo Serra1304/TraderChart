@@ -1,6 +1,7 @@
 package candleChart.view;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 
@@ -39,6 +40,7 @@ public class Info extends JPanel {
         lblInfo.setForeground(FONT_COLOR);
         lblInfo.setFont(FONT);
         lblInfo.setText(info);
+        lblInfo.setBorder(new EmptyBorder(0, 0, 0, 10));
         add(lblInfo);
     }
 

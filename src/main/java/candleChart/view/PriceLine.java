@@ -171,7 +171,7 @@ public class PriceLine extends JPanel {
         int requiredLabels = getHeight() / SIZE_GRID;
 
         // Agrega o elimina etiquetas de las divisiones según sea necesario.
-        while (getComponentCount() > requiredLabels) {
+        while (getComponentCount() > requiredLabels + 1) {
             remove(getComponentCount() - 1);
         }
 

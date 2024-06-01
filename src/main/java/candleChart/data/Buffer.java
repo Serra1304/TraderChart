@@ -5,6 +5,10 @@ import candleChart.model.Candle;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Clase que representa un buffer para almacenar velas.
+ */
 public class Buffer {
 
     private int maxSize;
@@ -202,8 +206,9 @@ public class Buffer {
 
     /**
      * Método que añade una vela al final del buffer. En caso de que el buffer tenga la propiedad autoSize establecida
-     * como false, solo se añadirán los datos siempre que el tamaño del buffer sea inferior al tamaño establecido en
-     * la propiedad maxSize. En caso de que sea true, el tamaño del buffer se ajustara según sea necesario.
+     * como false, y el tamaño del buffer sea el establecido en la propiedad maxSize, se descartara la primera vela del
+     * buffer y se añadirá la nueva al final de este. En caso contrario el tamaño del buffer se ajustará según sea
+     * necesario.
      *
      * @param candle Vela a agregar al buffer.
      */
@@ -214,6 +219,10 @@ public class Buffer {
             }
             else {
                 if(candleList.size() < maxSize - 1) {
+                    candleList.add(candle);
+                }
+                else {
+                    candleList.remove(0);
                     candleList.add(candle);
                 }
             }

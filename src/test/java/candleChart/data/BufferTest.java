@@ -231,7 +231,7 @@ public class BufferTest {
         buffer.addAll(arrayList);
         buffer.addLast(candle);
 
-        assertNotEquals(buffer.get(arrayList.size() - 1), candle);
+        assertEquals(buffer.get(arrayList.size() - 1), candle);
         assertEquals(arrayList.size(), buffer.size());
     }
 

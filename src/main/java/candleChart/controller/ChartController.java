@@ -8,6 +8,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+/**
+ * Clase encargada de controlar y gestionar los componentes y eventos del gráfico de velas.
+ */
 public class ChartController {
     private final ChartArea chartArea;
     private final PriceLine priceLine;
@@ -17,8 +20,12 @@ public class ChartController {
     private final Grid grid;
     private final CandleView candleView;
     private final CandleController candleController;
-    private Buffer buffer;
 
+    /**
+     * Constructor de la clase ChartController.
+     *
+     * @param jPanel El panel principal donde se añadirá el gráfico y sus componentes.
+     */
     public ChartController(JPanel jPanel) {
         chartArea = new ChartArea();
         priceLine = new PriceLine();
@@ -28,7 +35,6 @@ public class ChartController {
         grid = new Grid();
         candleView = new CandleView();
         candleController = new CandleController(candleView);
-        buffer = new Buffer();
 
         chartArea.add(candleView);
         chartArea.add(cursor);
@@ -52,26 +58,27 @@ public class ChartController {
     }
 
     /**
-     * Establece un buffer de datos en el gráfico. Para que cualquier cambio en el buffer sea representado gráficamente,
-     * es necesario hacer una llamada al método update.
+     * Establece un buffer de datos en el gráfico.
      *
      * @param buffer El buffer de datos a agregar al grafico.
+     * @throws NullPointerException En caso de que el buffer sea nulo.
      */
     public void setBuffer(Buffer buffer) {
-        this.buffer = buffer;
+        if(buffer == null) {
+            throw new NullPointerException("No se permiten valores nulos para el valor 'buffer'.");
+        }
         candleController.setBuffer(buffer);
+        updateAxles();
     }
 
 
     /**
-     * Obtiene el buffer de datos que contiene el gráfico, con todos los valores almacenado antes de haber llamado al
-     * método update. Esto quiere decir que el buffer puede contener elementos que aún no hayan sido actualizados en
-     * el gráfico.
+     * Obtiene el buffer de datos que contiene el gráfico.
      *
      * @return El buffer de datos del grafico.
      */
     public Buffer getBuffer() {
-        return buffer;
+        return candleController.getBuffer();
     }
 
 
@@ -118,42 +125,118 @@ public class ChartController {
         return cursor.isVisible();
     }
 
+
+    /**
+     * Establece la propiedad del tamaño de vela en el gráfico.
+     *
+     * @param candleSize El tamaño de vela.
+     * @throws NullPointerException En caso de que la propiedad 'candleSize' sea nula.
+     */
     public void setCandleSize(CandleSize candleSize) {
+        if(candleSize == null) {
+            throw new NullPointerException("La propiedad 'candleSize' no puede ser nula");
+        }
         candleController.setCandleSize(candleSize);
-        timeLine.setCandleSize(candleSize);
+        updateAxles();
     }
 
+
+    /**
+     * Obtiene el tamaño de vela establecido en el gráfico.
+     *
+     * @return El tamaño de vela.
+     */
     public CandleSize getCandleSize() {
         return candleController.getCandleSize();
     }
 
 
+    /**
+     * Avanza un paso en la representación del gráfico siempre que no haya llegado al principio de este.
+     */
     public void advance() {
         candleController.advance();
     }
 
+
+    /**
+     * Avanza en el gráfico el número de pasos proporcionado por parámetros.
+     *
+     * @param steps Número de pasos a avanzar en el buffer.
+     * @throws IllegalArgumentException Si el parámetro proporcionado es negativo.
+     */
     public void advance(int steps) {
+        if(steps < 0) {
+            throw new IllegalArgumentException("No se permiten valores negativos para la propiedad 'steps'.");
+        }
         candleController.advance(steps);
     }
 
+
+    /**
+     * Retrocede un paso en la representación del gráfico siempre que no haya llegado al final de este.
+     */
     public void retrieve() {
         candleController.retrieve();
     }
 
+
+    /**
+     * Retrocede en el gráfico el número de velas proporcionado por parámetro, o hasta que haya datos que mostrar.
+     *
+     * @param steps El número de pasos a retroceder en el buffer.
+     * @throws IllegalArgumentException Si el parámetro proporcionado es negativo.
+     */
     public void retrieve(int steps) {
+        if(steps < 0) {
+            throw new IllegalArgumentException("No se permiten valores negativos para la propiedad 'steps'.");
+        }
         candleController.retrieve(steps);
     }
 
+
+    /**
+     * Establece el simbol del gráfico en la información del gráfico.
+     *
+     * @param symbol El símbolo del gráfico representado.
+     */
     public void setSymbol(String symbol) {
         info.updateInfo(0, symbol);
     }
 
+
+    /**
+     * Obtiene el símbolo del gráfico representado.
+     *
+     * @return El símbolo del gráfico.
+     */
     public String getSymbol() {
         return info.getInfo(0);
     }
 
+
+    /**
+     * Método auxiliar que actualiza las líneas de tiempo y precio.
+     */
+    private void updateAxles() {
+        priceLine.setPriceRange(candleController.getMaxPrice(), candleController.getMinPrice());
+        timeLine.setCandleList(candleView.getCandleList());
+        timeLine.setCandleSize(candleController.getCandleSize());
+    }
+
+
+    /**
+     * Establece la configuración de los oyentes del ratón.
+     */
     private void setupMouse() {
         chartArea.addMouseListener(new MouseAdapter() {
+
+            /**
+             * Cuando el ratón sale del gráfico, los elementos del cursor, precio y fecha a la que apunta el cursor e
+             * información de la vela, son ocultados.
+             *
+             * @param e Evento del ratón.
+             */
             @Override
             public void mouseExited(MouseEvent e) {
                 super.mouseExited(e);
@@ -165,6 +248,13 @@ public class ChartController {
         });
 
         chartArea.addMouseMotionListener(new MouseMotionAdapter() {
+
+            /**
+             * Cuando el ratón es movido dentro del gráfico, los elementos del cursor, linea de precio y tiempo e
+             * información de vela son actualizados.
+             *
+             * @param e Evento del ratón.
+             */
             @Override
             public void mouseMoved(MouseEvent e) {
                 super.mouseMoved(e);
@@ -180,6 +270,13 @@ public class ChartController {
                 info.setVisibilityInfo(1, true);
             }
 
+
+            /**
+             * Si el ratón abandona el gráfico mientras se mantiene pulsado el botón, los elementos del ratón son
+             * ocultados, y si vuelve a entrar mientras sigue pulsado el botón se vuelven a mostrar estos elementos.
+             *
+             * @param e Evento del ratón.
+             */
             @Override
             public void mouseDragged(MouseEvent e) {
                 super.mouseDragged(e);
@@ -200,13 +297,15 @@ public class ChartController {
         });
     }
 
+
+    /**
+     * Establece la configuración del oyente de redimensionado del gráfico.
+     */
     private void setupChartListener() {
         candleView.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                priceLine.setPriceRange(candleController.getMaxPrice(), candleController.getMinPrice());
-                timeLine.setCandleList(candleView.getCandleList());
-                timeLine.setCandleSize(candleController.getCandleSize());
+                updateAxles();
             }
         });
     }
