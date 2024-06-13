@@ -1,5 +1,6 @@
 package candleChart.controller;
 
+import candleChart.charts.candle.CandleSize;
 import candleChart.data.Buffer;
 import candleChart.model.Candle;
 import org.junit.jupiter.api.BeforeEach;

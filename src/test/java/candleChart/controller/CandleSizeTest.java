@@ -1,6 +1,7 @@
 package candleChart.controller;
 
 
+import candleChart.charts.candle.CandleSize;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

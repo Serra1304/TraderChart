@@ -1,5 +1,6 @@
 package candleChart.view;
 
+import candleChart.charts.util.Grid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

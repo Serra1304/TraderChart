@@ -1,17 +1,41 @@
 package candleChart;
 
-import candleChart.controller.*;
+import candleChart.charts.base.ChartBase;
+import candleChart.charts.base.Info;
+import candleChart.charts.candle.CandleChart;
+import candleChart.charts.candle.CandleSize;
+//import candleChart.charts.config.CandleSizeManager;
 import candleChart.data.Buffer;
 
 import javax.swing.*;
 
+// TODO Clase para eliminar.
 public class TraderChart extends JPanel {
 
-    private final ChartController chartController;
     private Buffer buffer;
 
     public TraderChart() {
-        chartController = new ChartController(this);
+        setLayout(new OverlayLayout(this));
+
+        Buffer buffer1 = new Buffer();
+        //buffer1.setMaxSize(10);
+        buffer1.addAll(MainTest.obtenerListaVelas());
+
+        CandleChart candleChart = new CandleChart();
+        candleChart.setBuffer(buffer1);
+        //candleChart.setCandleSize(CandleSize.VERY_LARGE);
+
+        Info info = new Info();
+        info.addInfo("primera información");
+
+        ChartBase chartBase = new ChartBase();
+        //chartBase.setInfo(info);
+        chartBase.setChart(candleChart);
+
+
+        add(chartBase);
+
+//        candleSizeManager = CandleSizeManager.getInstance();
         buffer = new Buffer();
     }
 
@@ -47,7 +71,7 @@ public class TraderChart extends JPanel {
      */
     public void update() {
         final Buffer bf = buffer;
-        chartController.setBuffer(bf);
+        //chartController.setBuffer(bf);
     }
 
 
@@ -58,7 +82,7 @@ public class TraderChart extends JPanel {
      * @param visibility Visibilidad de la cuadrícula.
      */
     public void setGridVisible(boolean visibility) {
-        chartController.setGridVisible(visibility);
+        //chartController.setGridVisible(visibility);
     }
 
 
@@ -69,7 +93,7 @@ public class TraderChart extends JPanel {
      * @return Estado de la visibilidad de la cuadrícula.
      */
     public boolean isGridVisible() {
-        return chartController.isGridVisible();
+        return false;//chartController.isGridVisible();
     }
 
 
@@ -80,7 +104,7 @@ public class TraderChart extends JPanel {
      * @param visibility Visibilidad de las líneas del cursor.
      */
     public void setCursorVisible(boolean visibility) {
-        chartController.setCursorVisible(visibility);
+        //chartController.setCursorVisible(visibility);
     }
 
 
@@ -91,32 +115,39 @@ public class TraderChart extends JPanel {
      * @return Visibilidad de las líneas del cursor.
      */
     public boolean isCursorVisible() {
-        return chartController.isCursorVisible();
+        return false; //chartController.isCursorVisible();
     }
 
 
-    /**
-     * Establece el tamaño de vela del gráfico.
-     *
-     * @param candleSize El tamaño de vela a establecer en el gráfico.
-     * @throws NullPointerException Si la propiedad 'candleSize' proporcionada es nula.
-     */
+//    /**
+//     * Establece el tamaño de vela del gráfico.
+//     *
+//     * @param candleSize El tamaño de vela a establecer en el gráfico.
+//     * @throws NullPointerException Si la propiedad 'candleSize' proporcionada es nula.
+//     */
+//    public void setCandleSize(CandleSize candleSize) {
+//        if(candleSize == null) {
+//            throw new NullPointerException("No se permiten valores nulos para la propiedad 'candleSize");
+//        }
+//        chartController.setCandleSize(candleSize);
+//    }
+//
     public void setCandleSize(CandleSize candleSize) {
-        if(candleSize == null) {
-            throw new NullPointerException("No se permiten valores nulos para la propiedad 'candleSize");
-        }
-        chartController.setCandleSize(candleSize);
+        //chartController.setCandleSize(candleSize);
+//        candleSizeManager.setCandleSize(candleSize);
     }
 
 
-    /**
-     * Obtiene el tamaño de vela establecido en el gráfico.
-     *
-     * @return El tamaño de vela establecido en el gráfico.
-     */
-    public CandleSize getCandleSize() {
-        return chartController.getCandleSize();
-    }
+//    /**
+//     * Obtiene el tamaño de vela establecido en el gráfico.
+//     *
+//     * @return El tamaño de vela establecido en el gráfico.
+//     */
+//
+//    public CandleSize getCandleSize() {
+//        return candleSizeManager.getCandleSize();
+        //return chartController.getCandleSize();
+//    }
 
 
     /**
@@ -128,7 +159,7 @@ public class TraderChart extends JPanel {
         if(symbol == null) {
             throw new NullPointerException("El valor proporcionado para 'symbol' es nulo.");
         }
-        chartController.setSymbol(symbol);
+        //chartController.setSymbol(symbol);
     }
 
 
@@ -138,7 +169,7 @@ public class TraderChart extends JPanel {
      * @return El símbolo del gráfico.
      */
     public String getSymbol() {
-        return chartController.getSymbol();
+        return "";//chartController.getSymbol();
     }
 
 
@@ -146,7 +177,7 @@ public class TraderChart extends JPanel {
      * Avanza una posición en el gráfico siempre que haya datos que mostrar.
      */
     public void advance() {
-        chartController.advance();
+        //chartController.advance();
     }
 
 
@@ -160,7 +191,7 @@ public class TraderChart extends JPanel {
         if(steps < 0) {
             throw new IllegalArgumentException("No se permiten valores negativos para la propiedad 'steps'.");
         }
-        chartController.advance(steps);
+        //chartController.advance(steps);
     }
 
 
@@ -168,7 +199,7 @@ public class TraderChart extends JPanel {
      * Retrocede en el gráfico una posición siempre que haya datos que mostrar.
      */
     public void retrieve() {
-        chartController.retrieve();
+        //chartController.retrieve();
     }
 
 
@@ -182,6 +213,6 @@ public class TraderChart extends JPanel {
         if(steps < 0) {
             throw new IllegalArgumentException("No se permiten valores negativos para la propiedad 'steps'.");
         }
-        chartController.retrieve(steps);
+        //chartController.retrieve(steps);
     }
 }

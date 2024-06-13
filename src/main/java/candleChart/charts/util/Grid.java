@@ -1,4 +1,4 @@
-package candleChart.view;
+package candleChart.charts.util;
 
 import javax.swing.*;
 import java.awt.*;
@@ -82,7 +82,7 @@ public class Grid extends JPanel {
      *
      * @return Anchura de la división vertical.
      */
-    public double getGridX() {
+    public int getGridX() {
         return gridX;
     }
 

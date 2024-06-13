@@ -1,6 +1,7 @@
 package candleChart.view;
 
-import candleChart.controller.CandleSize;
+import candleChart.charts.candle.CandleSize;
+import candleChart.charts.candle.CandleView;
 import candleChart.model.Candle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ import static org.mockito.Mockito.*;
 
 public class CandleViewTest {
 
-    private  CandleView candleView;
+    private CandleView candleView;
 
     @BeforeEach
     public void setup() {

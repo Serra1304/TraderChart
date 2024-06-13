@@ -1,40 +1,47 @@
-package candleChart.controller;
+package candleChart.charts.candle;
 
+import candleChart.charts.base.Chart;
+import candleChart.charts.base.ChartListener;
+import candleChart.charts.base.Info;
 import candleChart.data.Buffer;
 import candleChart.model.Candle;
-import candleChart.view.CandleView;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Controller for candle view (CandleView) on the candle chart.
  */
-public class CandleController {
+public class CandleChart implements Chart{
     private static final double DEFAULT_MAX_PRICE = -Double.MAX_VALUE;
     private static final double DEFAULT_MIN_PRICE = Double.MAX_VALUE;
 
     private final CandleView candleView;
     private List<Candle> candleList;
-    private CandleSize candleSize;
     private int currentCandleIndex; // Indice de inicio de la lista de velas.
 
     private Buffer buffer;
     private double maxPrice, minPrice;
+    private int relativePosition;
+    private final List<ChartListener> chartListeners;
+    private Info info;
+    private int indexInfo;
 
     /**
-     * Constructor de la clase CandleController.
+     * Constructor de la clase CandleChart.
      * Crea una nueva instancia de la clase CandleView con los valores predeterminados.
-     *
-     * @param candleView Instancia de la vista para este controlador.
      */
-    public CandleController(CandleView candleView) {
-        this.candleView = candleView;
+    public CandleChart() {
+        this.candleView = new CandleView();
+        chartListeners = new ArrayList<>();
+        indexInfo = 0;
 
         candleList = new ArrayList<>();
-        candleSize = CandleSize.SMALL;
+        relativePosition = candleView.getCandleSize().getRelativePosition();
         currentCandleIndex = 0;
         buffer = new Buffer();
         setupView();
@@ -96,9 +103,10 @@ public class CandleController {
         if(candleSize == null) {
             throw new NullPointerException("No se permiten valores nulos para 'candleSize'.");
         }
-        this.candleSize = candleSize;
+        relativePosition = candleSize.getRelativePosition();
         candleView.setCandleSize(candleSize);
         updateCandleView();
+        notifyRelativePosition(relativePosition);
     }
 
 
@@ -108,7 +116,7 @@ public class CandleController {
      * @return Objeto de tipo 'CandleSize' con información del tamaño de la vela.
      */
     public CandleSize getCandleSize() {
-        return candleSize;
+        return candleView.getCandleSize();
     }
 
 
@@ -190,9 +198,10 @@ public class CandleController {
      * Método que establece la lista de velas que deben ser representadas en la vista.
      */
     private void updateCandleList() {
-        int visibleCandleCount = Math.max(candleView.getWidth() / candleSize.getRelativePosition(), 0);
+        int visibleCandleCount = Math.max((candleView.getWidth() + relativePosition) / relativePosition, 0);
         calculateVisibleCandleRange(visibleCandleCount);
         candleView.setCandleList(candleList);
+        notifyXAxisInfo(chartXAxisInfo());
     }
 
 
@@ -227,5 +236,84 @@ public class CandleController {
             minPrice = candleList.stream().mapToDouble(Candle::lowPrice).min().orElse(DEFAULT_MIN_PRICE);
         }
         candleView.setPriceRange(maxPrice, minPrice);
+        notifyYAxisRange(maxPrice, minPrice);
+    }
+
+    @NotNull
+    private List<String> chartXAxisInfo() {
+        List<String> listInfo = new ArrayList<>();
+
+        for(Candle candle: candleList){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM HH:mm");
+            String stringDateTime = candle.dateTime().format(formatter);
+
+            listInfo.add(stringDateTime);
+        }
+        return listInfo;
+    }
+
+    @Override
+    public CandleView getGraphicView() {
+        return candleView;
+    }
+
+
+    @Override
+    public void addListener(ChartListener listener) {
+        chartListeners.add(listener);
+        listener.OnRelativePosition(relativePosition);
+        listener.OnXAxisInfo(chartXAxisInfo());
+    }
+
+    @Override
+    public void removeListener(ChartListener listener) {
+        chartListeners.remove(listener);
+    }
+
+    @Override
+    public void notifyRelativePosition(int relativePosition) {
+        for(ChartListener listener: chartListeners) {
+            listener.OnRelativePosition(relativePosition);
+        }
+    }
+
+    @Override
+    public void notifyXAxisInfo(List<String> xAixisInfoList) {
+        for(ChartListener listener: chartListeners) {
+            listener.OnXAxisInfo(xAixisInfoList);
+        }
+    }
+
+    @Override
+    public void notifyYAxisRange(double rangeUp, double rangeDown) {
+        for(ChartListener listener: chartListeners) {
+            listener.OnPriceRange(rangeUp, rangeDown);
+        }
+    }
+
+    @Override
+    public void setCharInfo(@NotNull Info info) {
+        this.info = info;
+        this.info.addInfo("");
+        indexInfo = info.getComponentCount() - 1;
+    }
+
+    @Override
+    public void cursorMoved(int locationX, int locationY) {
+        if (info != null) {
+            int indexCandleTime = (locationX + relativePosition / 2) / relativePosition;  // Vela a la que apunta el cursor.
+
+            // Se actualiza el valor de la información con los datos de la vela a la que apunta el cursor.
+            if (candleList.size() > indexCandleTime) {
+                info.updateInfo(indexInfo, candleList.get(indexCandleTime).toString());
+            } else {
+                info.updateInfo(indexInfo, "");
+            }
+        }
+    }
+
+    @Override
+    public void cursorVisibility(boolean aFlag) {
+
     }
 }

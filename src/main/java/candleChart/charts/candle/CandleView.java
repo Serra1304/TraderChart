@@ -1,6 +1,5 @@
-package candleChart.view;
+package candleChart.charts.candle;
 
-import candleChart.controller.CandleSize;
 import candleChart.model.Candle;
 
 import javax.swing.*;

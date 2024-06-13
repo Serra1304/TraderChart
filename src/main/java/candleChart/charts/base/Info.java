@@ -1,4 +1,4 @@
-package candleChart.view;
+package candleChart.charts.base;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -11,7 +11,6 @@ import java.awt.*;
  */
 public class Info extends JPanel {
     private static final Color FONT_COLOR = Color.GRAY;
-    private static final Color BACKGROUND_COLOR = Color.BLACK;
     private static final Font FONT = new Font("Arial", Font.PLAIN, 12);
 
 
@@ -21,7 +20,7 @@ public class Info extends JPanel {
     public Info() {
         setPreferredSize(new Dimension(50,20));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setBackground(BACKGROUND_COLOR);
+        setOpaque(false);
     }
 
 
@@ -142,3 +141,4 @@ public class Info extends JPanel {
         }
     }
 }
+

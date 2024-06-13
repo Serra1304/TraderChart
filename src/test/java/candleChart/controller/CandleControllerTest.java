@@ -1,5 +1,7 @@
 package candleChart.controller;
 
+import candleChart.charts.candle.CandleChart;
+import candleChart.charts.candle.CandleSize;
 import candleChart.data.Buffer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,10 +14,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import candleChart.model.Candle;
-import candleChart.view.CandleView;
+import candleChart.charts.candle.CandleView;
 
 public class CandleControllerTest {
-    private CandleController candleController;
+    private CandleChart candleChart;
     private CandleView candleView;
 
     private Buffer buffer;
@@ -33,7 +35,7 @@ public class CandleControllerTest {
         candleList.add(new Candle(LocalDateTime.now(), 2.25, 2.30, 2.20, 2.22));
 
         candleView = Mockito.mock(CandleView.class);
-        candleController = new CandleController(candleView);
+        candleChart = new CandleChart(candleView);
 
         buffer = spy(new Buffer());
         buffer.addAll(candleList);
@@ -43,43 +45,43 @@ public class CandleControllerTest {
     public void testSetBuffer_NullBuffer() {
         NullPointerException exception;
         exception = assertThrows(NullPointerException.class, () -> {
-            candleController.setBuffer(null);
+            candleChart.setBuffer(null);
         });
         assertEquals("No se permiten valores nulos para el valor 'buffer'.", exception.getMessage());
     }
 
     @Test
     public void testSetBuffer_ValidBuffer() {
-        candleController.setBuffer(buffer);
+        candleChart.setBuffer(buffer);
 
-        assertEquals(buffer, candleController.getBuffer());
+        assertEquals(buffer, candleChart.getBuffer());
     }
 
     @Test
     public void testGetMaxPrice() {
         when(candleView.getWidth()).thenReturn(200);
 
-        candleController.setBuffer(buffer);
+        candleChart.setBuffer(buffer);
         double maxPrice = buffer.getAll().stream().mapToDouble(Candle::highPrice).max().orElse(0);
 
-        assertEquals(maxPrice, candleController.getMaxPrice());
+        assertEquals(maxPrice, candleChart.getMaxPrice());
     }
 
     @Test
     public void testGetMinPrice() {
         when(candleView.getWidth()).thenReturn(200);
 
-        candleController.setBuffer(buffer);
+        candleChart.setBuffer(buffer);
         double minPrice = buffer.getAll().stream().mapToDouble(Candle::lowPrice).min().orElse(0);
 
-        assertEquals(minPrice, candleController.getMinPrice());
+        assertEquals(minPrice, candleChart.getMinPrice());
     }
 
     @Test
     public void testSetCandleSize_NullCandleSize() {
         NullPointerException exception;
         exception = assertThrows(NullPointerException.class, () -> {
-            candleController.setCandleSize(null);
+            candleChart.setCandleSize(null);
         });
         assertEquals("No se permiten valores nulos para 'candleSize'.", exception.getMessage());
     }
@@ -87,24 +89,24 @@ public class CandleControllerTest {
     @Test
     public void testSetCandleSize_ValidCandleSize() {
         CandleSize candleSize = CandleSize.VERY_LARGE;
-        candleController.setCandleSize(candleSize);
+        candleChart.setCandleSize(candleSize);
 
-        assertEquals(candleSize, candleController.getCandleSize());
+        assertEquals(candleSize, candleChart.getCandleSize());
     }
 
     @Test
     public void testAdvance_OneStep() {
-        candleController = spy(new CandleController(new CandleView()));
-        candleController.advance();
+        candleChart = spy(new CandleChart(new CandleView()));
+        candleChart.advance();
 
-        verify(candleController, times(1)).advance(1);
+        verify(candleChart, times(1)).advance(1);
     }
 
     @Test
     public void testAdvance_NegativeStep() {
         IllegalArgumentException exception;
         exception = assertThrows(IllegalArgumentException.class, () -> {
-            candleController.advance(-2);
+            candleChart.advance(-2);
         });
         assertEquals("No se permiten valores negativos.", exception.getMessage());
     }
@@ -112,9 +114,9 @@ public class CandleControllerTest {
     @Test
     public void testAdvance_ValidStep() {
         when(candleView.getWidth()).thenReturn(10);
-        candleController.setBuffer(buffer);
-        candleController.retrieve(4);
-        candleController.advance(2);
+        candleChart.setBuffer(buffer);
+        candleChart.retrieve(4);
+        candleChart.advance(2);
 
         verify(candleView, atLeastOnce()).setCandleList(buffer.getAll().subList(4,5));
     }
@@ -122,26 +124,26 @@ public class CandleControllerTest {
     @Test
     public void testAdvance_OverStep() {
         when(candleView.getWidth()).thenReturn(10);
-        candleController.setBuffer(buffer);
-        candleController.retrieve(4);
-        candleController.advance(20);
+        candleChart.setBuffer(buffer);
+        candleChart.retrieve(4);
+        candleChart.advance(20);
 
         verify(candleView, atLeastOnce()).setCandleList(buffer.getAll().subList(6,7));
     }
 
     @Test
     public void testRetrieve_OneStep() {
-        candleController = spy(new CandleController(new CandleView()));
-        candleController.retrieve();
+        candleChart = spy(new CandleChart(new CandleView()));
+        candleChart.retrieve();
 
-        verify(candleController, times(1)).retrieve(1);
+        verify(candleChart, times(1)).retrieve(1);
     }
 
     @Test
     public void testRetrieve_NegativeStep() {
         IllegalArgumentException exception;
         exception = assertThrows(IllegalArgumentException.class, () -> {
-            candleController.retrieve(-2);
+            candleChart.retrieve(-2);
         });
         assertEquals("No se permiten valores negativos.", exception.getMessage());
     }
@@ -149,8 +151,8 @@ public class CandleControllerTest {
     @Test
     public void testRetrieve_ValidStep() {
         when(candleView.getWidth()).thenReturn(10);
-        candleController.setBuffer(buffer);
-        candleController.retrieve(4);
+        candleChart.setBuffer(buffer);
+        candleChart.retrieve(4);
 
         verify(candleView, atLeastOnce()).setCandleList(buffer.getAll().subList(2,3));
     }
@@ -158,8 +160,8 @@ public class CandleControllerTest {
     @Test
     public void testRetrieve_OverStep() {
         when(candleView.getWidth()).thenReturn(10);
-        candleController.setBuffer(buffer);
-        candleController.retrieve(20);
+        candleChart.setBuffer(buffer);
+        candleChart.retrieve(20);
 
         verify(candleView, atLeastOnce()).setCandleList(buffer.getAll().subList(0,1));
     }
