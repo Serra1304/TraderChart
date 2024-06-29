@@ -34,8 +34,7 @@ build/
 ### Mac OS ###
 .DS_Store
 
-### Development documents ###
+### Development ###
 Documents/
-
-### Development class ###
+out/
 src/main/java/candleChart/MainTest.java
