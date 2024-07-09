@@ -1,4 +1,4 @@
-package candleChart.exceptions;
+package candleChart.charts.candle;
 
 public class InvalidCandleException extends RuntimeException{
 

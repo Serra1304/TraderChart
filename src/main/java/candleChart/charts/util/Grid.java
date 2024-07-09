@@ -2,6 +2,8 @@ package candleChart.charts.util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.geom.Line2D;
 
 /**
@@ -27,6 +29,13 @@ public class Grid extends JPanel {
 
         // Se establece el fondo de la cuadrícula como transparente.
         setOpaque(false);
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                super.componentResized(e);
+                repaint();
+            }
+        });
     }
 
 

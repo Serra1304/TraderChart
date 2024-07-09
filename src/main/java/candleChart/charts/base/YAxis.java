@@ -4,9 +4,8 @@ import candleChart.charts.util.CursorListener;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
-public class YAxis extends JPanel implements CursorListener, ChartListener {
+public class YAxis extends JPanel implements CursorListener {
 
     private static final int DIVIDER_WIDTH = 4;
     private static final int PRICE_TAG_WIDTH = 60;
@@ -53,19 +52,21 @@ public class YAxis extends JPanel implements CursorListener, ChartListener {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.setColor(Color.GRAY);
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setColor(Color.GRAY);
+
 
         // Pintado de divisiones.
         for (int i = getHeight(); i >= 0; i -= SIZE_GRID) {
-            g.drawLine(0, i, DIVIDER_WIDTH, i);
+            g2d.drawLine(0, i, DIVIDER_WIDTH, i);
         }
 
         // Pintado línea actual de precio.
         if(currentPrice.isVisible()) {
-            g.drawLine(0, cursorLocationY, 5, cursorLocationY);
+            g2d.drawLine(0, cursorLocationY, 5, cursorLocationY);
         }
+        updateChartPrices();
     }
-
 
 
     /**
@@ -96,7 +97,6 @@ public class YAxis extends JPanel implements CursorListener, ChartListener {
             label.setLocation(8, getHeight() - (i * SIZE_GRID) - PRICE_TAG_HEIGHT / 2);
             label.setText(formattedNumber);
         }
-        repaint();
     }
 
 
@@ -139,19 +139,6 @@ public class YAxis extends JPanel implements CursorListener, ChartListener {
         repaint();
     }
 
-    @Override
-    public void OnRelativePosition(int relativePosition) {
-    }
-
-    @Override
-    public void OnChartInfo(String info) {
-    }
-
-    @Override
-    public void OnXAxisInfo(List<String> stringInfoList) {
-    }
-
-    @Override
     public void OnPriceRange(double rangeUp, double rangeDown) {
         this.rangeUp = rangeUp;
         this.rangeDown = rangeDown;

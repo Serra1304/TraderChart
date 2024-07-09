@@ -1,7 +1,5 @@
-package candleChart.model;
+package candleChart.charts.candle;
 
-
-import candleChart.exceptions.InvalidCandleException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

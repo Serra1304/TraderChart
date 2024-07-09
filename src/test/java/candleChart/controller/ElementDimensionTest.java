@@ -1,73 +1,73 @@
 package candleChart.controller;
 
 
-import candleChart.charts.candle.CandleSize;
+import candleChart.charts.base.ElementDimension;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class CandleSizeTest {
+public class ElementDimensionTest {
 
     @Test
     public void testVerySmall() {
-        CandleSize candle = CandleSize.VERY_SMALL;
+        ElementDimension candle = ElementDimension.VERY_SMALL;
         assertEquals(1, candle.getIndex());
         assertEquals(4, candle.getRelativePosition());
-        assertEquals(3, candle.getCandleWidth());
+        assertEquals(3, candle.getWidth());
     }
 
     @Test
     public void testSmall() {
-        CandleSize candle = CandleSize.SMALL;
+        ElementDimension candle = ElementDimension.SMALL;
         assertEquals(2, candle.getIndex());
         assertEquals(8, candle.getRelativePosition());
-        assertEquals(5, candle.getCandleWidth());
+        assertEquals(5, candle.getWidth());
     }
 
     @Test
     public void testLarge() {
-        CandleSize candle = CandleSize.LARGE;
+        ElementDimension candle = ElementDimension.LARGE;
         assertEquals(3, candle.getIndex());
         assertEquals(16, candle.getRelativePosition());
-        assertEquals(11, candle.getCandleWidth());
+        assertEquals(11, candle.getWidth());
     }
 
     @Test
     public void testVeryLarge() {
-        CandleSize candle = CandleSize.VERY_LARGE;
+        ElementDimension candle = ElementDimension.VERY_LARGE;
         assertEquals(4, candle.getIndex());
         assertEquals(32, candle.getRelativePosition());
-        assertEquals(19, candle.getCandleWidth());
+        assertEquals(19, candle.getWidth());
     }
 
     @Test
     public void testGetByIndex_VerySmall() {
-        CandleSize size = CandleSize.getByIndex(1);
-        assertEquals(CandleSize.VERY_SMALL, size);
+        ElementDimension size = ElementDimension.getByIndex(1);
+        assertEquals(ElementDimension.VERY_SMALL, size);
     }
 
     @Test
     public void testGetByIndex_Small() {
-        CandleSize size = CandleSize.getByIndex(2);
-        assertEquals(CandleSize.SMALL, size);
+        ElementDimension size = ElementDimension.getByIndex(2);
+        assertEquals(ElementDimension.SMALL, size);
     }
 
     @Test
     public void testGetByIndex_Large() {
-        CandleSize size = CandleSize.getByIndex(3);
-        assertEquals(CandleSize.LARGE, size);
+        ElementDimension size = ElementDimension.getByIndex(3);
+        assertEquals(ElementDimension.LARGE, size);
     }
 
     @Test
     public void testGetByIndex_VeryLarge() {
-        CandleSize size = CandleSize.getByIndex(4);
-        assertEquals(CandleSize.VERY_LARGE, size);
+        ElementDimension size = ElementDimension.getByIndex(4);
+        assertEquals(ElementDimension.VERY_LARGE, size);
     }
 
     @Test
     public void testGetByIndex_InvalidIndex() {
-        CandleSize size = CandleSize.getByIndex(5);
+        ElementDimension size = ElementDimension.getByIndex(5);
         assertNull(size);
     }
 }

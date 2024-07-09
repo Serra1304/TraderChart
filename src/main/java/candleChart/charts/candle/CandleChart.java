@@ -1,319 +1,265 @@
 package candleChart.charts.candle;
 
 import candleChart.charts.base.Chart;
-import candleChart.charts.base.ChartListener;
-import candleChart.charts.base.Info;
-import candleChart.data.Buffer;
-import candleChart.model.Candle;
+import candleChart.charts.base.ChartBase;
+import candleChart.charts.base.Range;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
- * Controller for candle view (CandleView) on the candle chart.
+ * CandleChart es una clase que representa un gráfico de velas para mostrar datos financieros.
+ * Extiende la clase Chart y está diseñada para trabajar con objetos de tipo Candle.
  */
-public class CandleChart implements Chart{
-    private static final double DEFAULT_MAX_PRICE = -Double.MAX_VALUE;
-    private static final double DEFAULT_MIN_PRICE = Double.MAX_VALUE;
-
-    private final CandleView candleView;
-    private List<Candle> candleList;
-    private int currentCandleIndex; // Indice de inicio de la lista de velas.
-
-    private Buffer buffer;
-    private double maxPrice, minPrice;
+public class CandleChart extends Chart<Candle> {
     private int relativePosition;
-    private final List<ChartListener> chartListeners;
-    private Info info;
-    private int indexInfo;
+    private int elementWidth;
+    private final Range range;
 
-    /**
-     * Constructor de la clase CandleChart.
-     * Crea una nueva instancia de la clase CandleView con los valores predeterminados.
-     */
-    public CandleChart() {
-        this.candleView = new CandleView();
-        chartListeners = new ArrayList<>();
-        indexInfo = 0;
-
-        candleList = new ArrayList<>();
-        relativePosition = candleView.getCandleSize().getRelativePosition();
-        currentCandleIndex = 0;
-        buffer = new Buffer();
-        setupView();
-    }
+    private Color upWardCandleBorderColor;
+    private Color upWardCandleFillColor;
+    private Color downWardCandleBorderColor;
+    private Color downWardCandleFillColor;
 
 
     /**
-     * Establece un buffer de datos en el controlador.
+     * Constructor de CandleChart.
      *
-     * @param buffer El buffer de datos a establecer en el controlador.
-     * @throws NullPointerException Si el buffer proporcionado es nulo.
+     * @param chartBase gráfico base que proporciona la configuración común, los métodos compartidos y las
+     *                  actualizaciones del gráfico.
      */
-    public void setBuffer(Buffer buffer) {
-        if(buffer == null) {
-            throw new NullPointerException("No se permiten valores nulos para el valor 'buffer'.");
-        }
-        this.buffer = buffer;
-        updateCandleView();
+    public CandleChart(ChartBase chartBase) {
+        super(chartBase);
+
+        // Valores predeterminado de los parámetros del gráfico.
+        relativePosition = 1;
+        elementWidth = 1;
+        range = new Range(0, 0);
+
+        // Establece el color por defecto de las velas del gráfico.
+        upWardCandleBorderColor = new Color(0, 127, 0);
+        upWardCandleFillColor = new Color(0, 255, 0);
+        downWardCandleBorderColor = new Color(127, 0, 0);
+        downWardCandleFillColor = new Color(255, 0, 0);
     }
 
 
     /**
-     * Obtiene el buffer de datos del controlador.
+     * Dibuja el gráfico de velas en el contexto gráfico proporcionado.
      *
-     * @return El buffer de datos del controlador.
+     * @param g2d el contexto gráfico donde se dibuja el gráfico.
      */
-    public Buffer getBuffer() {
-        return buffer;
-    }
+    @Override
+    protected void drawChart(Graphics2D g2d) {
+        List<Candle> candles = getBuffer();
 
+        if(!candles.isEmpty()) {
+            // Iteración sobre la lista de velas.
+            for (int i = 0; i < candles.size(); i++) {
+                // Se dibuja las lineas de las velas.
+                g2d.setColor(candles.get(i).openPrice() > candles.get(i).closePrice()?  // Establece el color de la línea de la vela
+                        downWardCandleBorderColor : upWardCandleBorderColor);
+                g2d.drawLine(xAxisPosition(i), yAxisPosition(candles.get(i).highPrice()),   // Pinta la línea de la vela.
+                        xAxisPosition(i), yAxisPosition(candles.get(i).lowPrice()));
 
-    /**
-     * Obtiene el precio máximo que será representado en el gráfico.
-     *
-     * @return El precio máximo.
-     */
-    public double getMaxPrice() {
-        return maxPrice;
-    }
-
-
-    /**
-     * Obtiene el precio mínimo que será representado en el gráfico.
-     *
-     * @return El precio mínimo.
-     */
-    public double getMinPrice() {
-        return minPrice;
-    }
-
-
-    /**
-     * Establece un objeto de tipo 'CandleSize' que proporciona información sobre el tamaño de las velas.
-     *
-     * @param candleSize Un objeto de tipo 'CandleSize'.
-     * @throws NullPointerException Si el valor proporcionado de 'candleSize' es nulo.
-     */
-    public void setCandleSize(CandleSize candleSize) {
-        if(candleSize == null) {
-            throw new NullPointerException("No se permiten valores nulos para 'candleSize'.");
-        }
-        relativePosition = candleSize.getRelativePosition();
-        candleView.setCandleSize(candleSize);
-        updateCandleView();
-        notifyRelativePosition(relativePosition);
-    }
-
-
-    /**
-     * Obtiene un objeto de tipo 'CandleSize' que proporciona información del tamaño de la vela.
-     *
-     * @return Objeto de tipo 'CandleSize' con información del tamaño de la vela.
-     */
-    public CandleSize getCandleSize() {
-        return candleView.getCandleSize();
-    }
-
-
-    /**
-     * Avanza un paso en la representación del gráfico siempre que no haya llegado al principio de este.
-     */
-    public void advance() {
-        advance(1);
-    }
-
-
-    /**
-     * Avanza en el gráfico el número de pasos proporcionado por parámetros. Si el número pasado por parámetro
-     * sobrepasa el inicio del buffer, se establece el inicio del buffer como primer valor a representar.
-     *
-     * @param steps Número de pasos a avanzar en el buffer.
-     * @throws IllegalArgumentException Si el parámetro proporcionado es negativo.
-     */
-    public void advance(int steps) {
-        if(steps < 0) {
-            throw new IllegalArgumentException("No se permiten valores negativos.");
-        }
-
-        currentCandleIndex = Math.max(currentCandleIndex - steps, 0);
-        updateCandleView();
-    }
-
-
-    /**
-     * Retrocede un paso en la representación del gráfico siempre que no se haya llegado al final del buffer.
-     */
-    public void retrieve() {
-        retrieve(1);
-    }
-
-
-    /**
-     * Retrocede el número de velas proporcionado por parámetro. Si el número de pasos proporcionados para retroceder
-     * supera a los que puede ser representado por el buffer, se establece el máximo permitido para la correcta
-     * representación de la fracción del buffer
-     *
-     * @param steps El número de pasos a retroceder en el buffer.
-     * @throws IllegalArgumentException Si el parámetro proporcionado es negativo.
-     */
-    public void retrieve(int steps) {
-        if(steps < 0) {
-            throw new IllegalArgumentException("No se permiten valores negativos.");
-        }
-
-        int maxSteps = buffer.size() - candleList.size() - 1;
-        currentCandleIndex = maxSteps - currentCandleIndex > steps? currentCandleIndex + steps: maxSteps ;
-        updateCandleView();
-    }
-
-
-    /**
-     * Configura los distintos elementos de la vista.
-     */
-    private void setupView() {
-        candleView.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                updateCandleView();
+                // Se dibuja el rectángulo de las velas.
+                double maxOpenOrClose = Math.max(candles.get(i).openPrice(), candles.get(i).closePrice());
+                double minOpenOrClose = Math.min(candles.get(i).openPrice(), candles.get(i).closePrice());
+                int rectY = yAxisPosition(maxOpenOrClose);
+                int rectHeight = yAxisPosition(minOpenOrClose) - rectY;
+                g2d.drawRect(xAxisPosition(i) - (elementWidth / 2) , rectY,         // Dibuja el borde del cuerpo de la vela
+                        elementWidth - 1, rectHeight);
+                g2d.setColor(candles.get(i).openPrice() > candles.get(i).closePrice()? // Establece el color del relleno de la vela.
+                        downWardCandleFillColor : upWardCandleFillColor);
+                g2d.fillRect(xAxisPosition(i) - (elementWidth / 2) + 1,             // Pinta el relleno de la vela.
+                        rectY, elementWidth - 2, rectHeight);
             }
-        });
-    }
-
-
-    /**
-     * Método encargado de llamar a todos los demás métodos auxiliares para la actualización de la vista.
-     */
-    private void updateCandleView() {
-        updateCandleList();
-        updatePriceRange();
-    }
-
-
-    /**
-     * Método que establece la lista de velas que deben ser representadas en la vista.
-     */
-    private void updateCandleList() {
-        int visibleCandleCount = Math.max((candleView.getWidth() + relativePosition) / relativePosition, 0);
-        calculateVisibleCandleRange(visibleCandleCount);
-        candleView.setCandleList(candleList);
-        notifyXAxisInfo(chartXAxisInfo());
-    }
-
-
-    /**
-     * Método auxiliar que establece el rango de velas a mostrar en la vista.
-     * @param visibleCandleCount Número de velas que pueden ser representadas en la vista.
-     */
-    private void calculateVisibleCandleRange(int visibleCandleCount) {
-        int bufferSize = buffer.size();
-        if (bufferSize == 0) {
-            currentCandleIndex = 0;
-            return;
         }
-        currentCandleIndex = Math.min(currentCandleIndex, bufferSize - 1); // Índice de inicio de las velas a mostrar.
-        int candleLast = bufferSize - 1 - currentCandleIndex;   // Índice de la ultima vela a mostrar (Índice inferior).
-        int candleFirst = Math.max(candleLast - visibleCandleCount, 0); // Índice de la primera vela (Índice superior).
-        candleList = buffer.getAll().subList(candleFirst, candleLast);
     }
 
 
     /**
-     * Método auxiliar que establece el rango de precio en la vista (candleView). En caso de existir una lista de velas
-     * vacía, se establece el rando de precio mínimo y máximo en 0. En caso contrario se establecerá el rango superior
-     * con el mayor valor de precio de la lista y el rango inferior con el rango inferior de la lista.
+     * Calcula el rango de precios en el que se mostrara el gráfico de velas. Este rango será combinado con el rango del
+     * charBase si no se especifica lo contrario.
+     *
+     * @return un objeto Range que representa el rango de precios.
      */
-    private void updatePriceRange() {
-        if (candleList.isEmpty()) {
-            maxPrice = 0;
-            minPrice = 0;
-        } else {
-            maxPrice = candleList.stream().mapToDouble(Candle::highPrice).max().orElse(DEFAULT_MAX_PRICE);
-            minPrice = candleList.stream().mapToDouble(Candle::lowPrice).min().orElse(DEFAULT_MIN_PRICE);
+    @Override
+    protected Range calculateRange() {
+        List<Candle> buffer = getBuffer();
+
+        if (buffer.isEmpty()) {
+            return new Range(0, 0);
         }
-        candleView.setPriceRange(maxPrice, minPrice);
-        notifyYAxisRange(maxPrice, minPrice);
+
+        double minPrice = buffer.get(0).lowPrice();
+        double maxPrice = buffer.get(0).highPrice();
+
+        for (Candle candle: buffer) {
+            minPrice = Math.min(candle.lowPrice(), minPrice);
+            maxPrice = Math.max(candle.highPrice(), maxPrice);
+        }
+        return new Range(minPrice, maxPrice);
     }
 
-    @NotNull
-    private List<String> chartXAxisInfo() {
-        List<String> listInfo = new ArrayList<>();
 
-        for(Candle candle: candleList){
+    /**
+     * Proporciona la información que será representada en el eje X del gráfico.
+     * Esta información podrá ser omitida desde la clase heredada Chart.
+     *
+     * @return una lista de cadena de texto que representa la información del eje X.
+     */
+    @Override
+    protected List<String> xAxisInfo() {
+        List<String> infoList = new ArrayList<>();
+
+        for(Candle candle: getBuffer()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM HH:mm");
             String stringDateTime = candle.dateTime().format(formatter);
 
-            listInfo.add(stringDateTime);
+            infoList.add(stringDateTime);
         }
-        return listInfo;
-    }
-
-    @Override
-    public CandleView getGraphicView() {
-        return candleView;
+        return infoList;
     }
 
 
+    /**
+     * Actualiza el rango del gráfico. Este rango es el establecido en el chartBase, por lo que no tiene por qué
+     * coincidir con el calculado en {@link #calculateRange()}, sino que será una combinación del rango de todos los
+     * gráficos contenidos en el charBase.
+     *
+     * @param range el rango del gráfico actualizado.
+     */
     @Override
-    public void addListener(ChartListener listener) {
-        chartListeners.add(listener);
-        listener.OnRelativePosition(relativePosition);
-        listener.OnXAxisInfo(chartXAxisInfo());
+    public void onRangeUpdate(@NotNull Range range) {
+        this.range.setRange(range.getLowerRange(), range.getUpperRange());
     }
 
+
+    /**
+     * Actualiza la posición relativa de los elementos del gráfico.
+     *
+     * @param relativePosition la posición relativa actualizada.
+     */
     @Override
-    public void removeListener(ChartListener listener) {
-        chartListeners.remove(listener);
+    public void onRelativePositionUpdate(int relativePosition) {
+        this.relativePosition = relativePosition;
     }
 
+
+    /**
+     * Actualiza la anchura de los elementos del gráfico.
+     *
+     * @param elementWidth el ancho de los elementos actualizado.
+     */
     @Override
-    public void notifyRelativePosition(int relativePosition) {
-        for(ChartListener listener: chartListeners) {
-            listener.OnRelativePosition(relativePosition);
-        }
+    public void onElementWidthUpdate(int elementWidth) {
+        this.elementWidth = elementWidth;
     }
 
-    @Override
-    public void notifyXAxisInfo(List<String> xAixisInfoList) {
-        for(ChartListener listener: chartListeners) {
-            listener.OnXAxisInfo(xAixisInfoList);
-        }
+
+    /**
+     * Obtiene el color del brode de una vela ascendente.
+     *
+     * @return el color del borde de una vela ascendente.
+     */
+    public Color getUpWardCandleBorderColor() {
+        return upWardCandleBorderColor;
     }
 
-    @Override
-    public void notifyYAxisRange(double rangeUp, double rangeDown) {
-        for(ChartListener listener: chartListeners) {
-            listener.OnPriceRange(rangeUp, rangeDown);
-        }
+
+    /**
+     * Establece el color del borde de las velas ascendentes.
+     *
+     * @param upWardCandleBorderColor el nuevo color del borde de las velas ascendentes.
+     */
+    public void setUpWardCandleBorderColor(Color upWardCandleBorderColor) {
+        this.upWardCandleBorderColor = upWardCandleBorderColor;
     }
 
-    @Override
-    public void setCharInfo(@NotNull Info info) {
-        this.info = info;
-        this.info.addInfo("");
-        indexInfo = info.getComponentCount() - 1;
+
+    /**
+     * Obtiene el color de relleno de las velas ascendentes.
+     *
+     * @return el color de relleno de las velas ascendentes.
+     */
+    public Color getUpWardCandleFillColor() {
+        return upWardCandleFillColor;
     }
 
-    @Override
-    public void cursorMoved(int locationX, int locationY) {
-        if (info != null) {
-            int indexCandleTime = (locationX + relativePosition / 2) / relativePosition;  // Vela a la que apunta el cursor.
 
-            // Se actualiza el valor de la información con los datos de la vela a la que apunta el cursor.
-            if (candleList.size() > indexCandleTime) {
-                info.updateInfo(indexInfo, candleList.get(indexCandleTime).toString());
-            } else {
-                info.updateInfo(indexInfo, "");
-            }
-        }
+    /**
+     * Establece el color de relleno de las velas ascendentes.
+     *
+     * @param upWardCandleFillColor en nuevo color de relleno de las velas ascendentes.
+     */
+    public void setUpWardCandleFillColor(Color upWardCandleFillColor) {
+        this.upWardCandleFillColor = upWardCandleFillColor;
     }
 
-    @Override
-    public void cursorVisibility(boolean aFlag) {
 
+    /**
+     * Obtiene el color del borde de las velas descendentes.
+     *
+     * @return el color del borde de las velas descendentes.
+     */
+    public Color getDownWardCandleBorderColor() {
+        return downWardCandleBorderColor;
+    }
+
+
+    /**
+     * Establece el color del borde de las velas descendentes.
+     *
+     * @param downWardCandleBorderColor el nuevo color de las velas descendentes.
+     */
+    public void setDownWardCandleBorderColor(Color downWardCandleBorderColor) {
+        this.downWardCandleBorderColor = downWardCandleBorderColor;
+    }
+
+
+    /**
+     * Obtiene el color de relleno de las velas descendentes.
+     *
+     * @return el color de relleno de las velas descendentes.
+     */
+    public Color getDownWardCandleFillColor() {
+        return downWardCandleFillColor;
+    }
+
+
+    /**
+     * Establece el color de relleno de las velas descendentes.
+     *
+     * @param downWardCandleFillColor el nuevo color de relleno de las velas descendentes.
+     */
+    public void setDownWardCandleFillColor(Color downWardCandleFillColor) {
+        this.downWardCandleFillColor = downWardCandleFillColor;
+    }
+
+
+    /**
+     * Obtiene la posición en pixel en el eje X del índice del elemento proporcionado.
+     *
+     * @param elementIndex índice del elemento del que se quiere obtener la posición en el eje X.
+     * @return la posición en el eje X del índice del elemento proporcionado.
+     */
+    private int xAxisPosition(int elementIndex) {
+        return elementIndex * relativePosition -1;
+    }
+
+
+    /**
+     * Obtiene la posición en pixel en el eje Y del valor proporcionado.
+     *
+     * @param value valor del que se quiere obtener la posición en el eje Y.
+     * @return la posición en el eje Y del valor proporcionado.
+     */
+    private int yAxisPosition(double value) {
+        return (int) ((range.getUpperRange() - value) / (range.difRange() / getHeight()));
     }
 }

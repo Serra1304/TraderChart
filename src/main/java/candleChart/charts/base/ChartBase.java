@@ -1,112 +1,166 @@
 package candleChart.charts.base;
 
-import candleChart.charts.util.Grid;
-import candleChart.charts.util.Cursor;
+import candleChart.charts.util.CursorListener;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
-import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ChartBase extends JPanel {
-
-    private final JPanel chartArea;
-    private final Grid grid;
-    private final Cursor cursor;
-
+public class ChartBase extends JPanel implements CursorListener {
     private XAxis xAxis;
     private YAxis yAxis;
     private Info info;
 
-    GridBagConstraints gbc = new GridBagConstraints();
+    private final ChartUiManager chartUiManager;
+    private final NotifyService notifyService;
+    private final List<Range> rangeList = new ArrayList<>();
+    private double lowerRange = Double.MAX_VALUE;
+    private double upperRange = Double.MIN_VALUE;
+    private final int relativePosition = ElementDimension.SMALL.getRelativePosition();
+    private final int elementWidth = ElementDimension.SMALL.getWidth();
+    private String title;
 
     public ChartBase() {
-        chartArea = new JPanel();
-        grid = new Grid();
-        cursor = new Cursor();
+        chartUiManager = new ChartUiManager(this);
+        chartUiManager.getCursor().addCursorListener(this);
 
-        setBackground(Color.BLACK);
-        setOpaque(true);
-        //setDoubleBuffered(true);
-        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        setLayout(new GridBagLayout());
+        notifyService = new NotifyService(this);
 
-        gbc.fill = GridBagConstraints.BOTH;
+        xAxis = new XAxis();
+        yAxis = new YAxis();
+        info = new Info();
 
-        setChartArea();
-        setXAxis(new XAxis());      //TODO Implementacion provisional
-        setYAxis(new YAxis());      //TODO Implementacion provisional
+        title = "";
     }
 
-    private void setChartArea() {
-        chartArea.setLayout(new OverlayLayout(chartArea));
-        chartArea.setOpaque(false);
-        chartArea.setBorder(new LineBorder(Color.GRAY));
-        chartArea.add(cursor);
-        chartArea.add(grid);
+    // Añadir grafico
+    public void addChart(Chart<?> chart) {
+        chartUiManager.getChartArea().add(chart, 0);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        add(chartArea, gbc);
+        notifyService.addChartListener(chart);
+        notifyService.notifyChart(chart);
     }
 
+    // Eliminar grafico
+    public void removeChart(Chart<?> chart) {
+        chartUiManager.getChartArea().remove(chart);
 
-    public void setGridVisible(boolean aFlag) {
-        grid.setVisible(aFlag);
+        notifyService.removedChartListener(chart);
     }
 
-    public boolean isGridVisible() {
-        return grid.isVisible();
+    public XAxis getXAxis() {
+        return xAxis;
     }
 
     public void setXAxis(XAxis xAxis) {
         this.xAxis = xAxis;
-        cursor.addCursorListener(this.xAxis);
+        this.xAxis.onRelativePosition(relativePosition);
+        chartUiManager.setXAxis(xAxis);
+    }
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        gbc.weighty = 0;
-        add(this.xAxis, gbc);
+    public YAxis getYAxis() {
+        return yAxis;
     }
 
     public void setYAxis(YAxis yAxis) {
         this.yAxis = yAxis;
-        cursor.addCursorListener(this.yAxis);
+        chartUiManager.setYAxis(yAxis);
+    }
 
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        gbc.weightx = 0;
-        add(this.yAxis, gbc);
+    public Info getInfo() {
+        return info;
     }
 
     public void setInfo(Info info) {
         this.info = info;
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        gbc.weightx = 1;
-        add(this.info, gbc);
+        this.info.setInfo(title);
+        chartUiManager.setInfo(info);
     }
 
-    public void setChart(Chart chart) {
-        if(xAxis != null) {
-            chart.addListener(xAxis);
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+        info.setInfo(title);
+    }
+
+    public boolean isGridVisible() {
+        return chartUiManager.getGrid().isVisible();
+    }
+
+    public void setGridVisible(boolean aFlag) {
+        chartUiManager.getGrid().setVisible(aFlag);
+    }
+
+    public boolean isCursorVisible() {
+        return chartUiManager.getCursor().isCursorVisible();
+    }
+
+    public void setCursorVisible(boolean aFlag) {
+        chartUiManager.getCursor().setCursorVisible(aFlag);
+    }
+
+    protected void setXAxisInfo(List<String> infoList) {
+        xAxis.onXAxisInfo(infoList);
+    }
+
+    protected void mergeRange(Range range) {
+        rangeList.add(range);
+        lowerRange = Double.MAX_VALUE;
+        upperRange = Double.MIN_VALUE;
+            for (Range objRange: rangeList) {
+                lowerRange = Math.min(lowerRange, objRange.getLowerRange());
+                upperRange = Math.max(upperRange, objRange.getUpperRange());
+            }
+        notifyService.notifyRange();
+    }
+
+    protected void deleteRange(Range range) {
+        rangeList.remove(range);
+
+        lowerRange = Double.MAX_VALUE;
+        upperRange = Double.MIN_VALUE;
+        for (Range objRange: rangeList) {
+            lowerRange = Math.min(lowerRange, objRange.getLowerRange());
+            upperRange = Math.max(upperRange, objRange.getUpperRange());
+        }
+        notifyService.notifyRange();
+    }
+
+    protected Range getRange() {
+        return new Range(lowerRange, upperRange);
+    }
+
+    protected int getRelativePosition() {
+        return relativePosition;
+    }
+
+    protected int getElementWidth() {
+        return elementWidth;
+    }
+
+    @Override
+    public void cursorMoved(int locationX, int locationY) {
+        int index = (locationX + relativePosition / 2) / relativePosition;
+        String info = "";
+        if(!title.isEmpty()) {
+            info = title + "     ";
         }
 
-        if(yAxis != null) {
-            chart.addListener(yAxis);
+        for (Chart<?> chart: notifyService.getAllChartsListeners()) {
+            if (chart.isInfoVisibility()) {
+                info = info + chart.getTitle() + ": " + chart.getElementInfo(index) + "     ";
+            }
         }
+        this.info.setInfo(info);
+    }
 
-        if(info != null) {
-            chart.setCharInfo(info);
+    @Override
+    public void cursorVisibility(boolean aFlag) {
+        if(!aFlag) {
+            info.setInfo(title);
         }
-
-        cursor.addCursorListener(chart);
-        chartArea.add(chart.getGraphicView(), 0);
     }
 }

@@ -14,10 +14,10 @@ import java.util.List;
  * visibilidad personalizada.
  */
 public class Cursor extends JPanel {
-
     private int locationX;
     private int locationY;
     private boolean cursorVisible;
+    private boolean globalVisibility;
 
     private final List<CursorListener> listenerList;
 
@@ -25,6 +25,7 @@ public class Cursor extends JPanel {
         locationX = 0;
         locationY = 0;
         cursorVisible = false;
+        globalVisibility = true;
 
         listenerList = new ArrayList<>();
 
@@ -35,13 +36,22 @@ public class Cursor extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-
+        Graphics2D g2d = (Graphics2D) g;
         // Pinta el cursor si cursorVisible está establecido como true.
-        if (cursorVisible) {
-            g.setColor(Color.GRAY);
-            g.drawLine(locationX, 0, locationX, getHeight());
-            g.drawLine(0, locationY, getWidth(), locationY);
+        if (cursorVisible && globalVisibility) {
+            g2d.setColor(Color.GRAY);
+            g2d.drawLine(locationX, 0, locationX, getHeight());
+            g2d.drawLine(0, locationY, getWidth(), locationY);
         }
+    }
+
+    public boolean isCursorVisible() {
+        return globalVisibility;
+    }
+
+    public void setCursorVisible(boolean aFlag) {
+        globalVisibility = aFlag;
+        repaint();
     }
 
     public void addCursorListener(CursorListener listener) {
@@ -52,7 +62,7 @@ public class Cursor extends JPanel {
         listenerList.remove(listener);
     }
 
-    private void notifyCursorListener() {
+    private void notifyCursorMoved() {
         for(CursorListener listener : listenerList) {
             listener.cursorMoved(locationX, locationY);
         }
@@ -92,7 +102,7 @@ public class Cursor extends JPanel {
 
                 locationX = e.getX();
                 locationY = e.getY();
-                notifyCursorListener();
+                notifyCursorMoved();
 
                 if(!cursorVisible) {
                     setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.CROSSHAIR_CURSOR));
@@ -110,7 +120,7 @@ public class Cursor extends JPanel {
 
                     locationX = e.getX();
                     locationY = e.getY();
-                    notifyCursorListener();
+                    notifyCursorMoved();
 
                     if(!cursorVisible) {
                         setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.CROSSHAIR_CURSOR));

@@ -7,7 +7,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class XAxis extends JPanel implements CursorListener, ChartListener {
+public class XAxis extends JPanel implements CursorListener {
     private static final int DIVIDER_HEIGHT = 4;            // Anchura de las divisiones
     private static final int DIVIDER_SIZE = 64;             // Espacio entre divisiones
     private static final int CURRENT_LABEL_WIDTH = 100;
@@ -63,8 +63,9 @@ public class XAxis extends JPanel implements CursorListener, ChartListener {
 
         // Se pinta posición del cursor si es necesario.
         if (currentTime.isVisible()) {
-            g.drawLine(cursorLocationX, 0, cursorLocationX, DIVIDER_HEIGHT);
+            g.drawLine(cursorLocationX +1, 0, cursorLocationX +1, DIVIDER_HEIGHT);
         }
+        updateChartDate();
     }
 
 
@@ -79,7 +80,7 @@ public class XAxis extends JPanel implements CursorListener, ChartListener {
      */
     @Override
     public void cursorMoved(int locationX, int locationY) {
-        cursorLocationX = locationX + 1;
+        cursorLocationX = locationX;
         int positionX;
 
         // Posición de la etiqueta que muestra información actual del cursor al aproximarse al borde izquierdo.
@@ -118,27 +119,18 @@ public class XAxis extends JPanel implements CursorListener, ChartListener {
         repaint();
     }
 
-    @Override
-    public void OnRelativePosition(int relativePosition) {
+    public void onRelativePosition(int relativePosition) {
         this.relativePosition = relativePosition;
         updateChartDate();
         repaint();
     }
 
-    @Override
-    public void OnChartInfo(String info) {
-    }
-
-    @Override
-    public void OnXAxisInfo(List<String> stringInfoList) {
+    public void onXAxisInfo(List<String> stringInfoList) {
         infoList = stringInfoList;
         updateChartDate();
         repaint();
     }
 
-    @Override
-    public void OnPriceRange(double rangeUp, double rangeDown) {
-    }
 
     /**
      * Método que actualiza los valores de las fechas de la línea de tiempo.
@@ -161,7 +153,7 @@ public class XAxis extends JPanel implements CursorListener, ChartListener {
 
         // Actualiza los valores de las fechas de las etiquetas.
         for(int i = 1; i < getComponentCount(); i++) {
-            int indexCandleTime = i * (DIVIDER_SIZE / relativePosition) - (DIVIDER_SIZE / relativePosition);
+            int indexCandleTime = i * relativePosition - relativePosition;
             if(infoList.size() > indexCandleTime) {
 
                 JLabel label = (JLabel) getComponent(i);

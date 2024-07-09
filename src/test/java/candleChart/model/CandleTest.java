@@ -1,6 +1,7 @@
 package candleChart.model;
 
-import candleChart.exceptions.InvalidCandleException;
+import candleChart.charts.candle.Candle;
+import candleChart.charts.candle.InvalidCandleException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
