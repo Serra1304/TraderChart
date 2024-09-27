@@ -1,4 +1,4 @@
-package es.gtorresdev.jfxtradechart;
+package es.gtorresdev.jfxtradechart.componets;
 
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Pos;

@@ -1,5 +1,8 @@
 package es.gtorresdev.jfxtradechart;
 
+import es.gtorresdev.jfxtradechart.componets.Grid;
+import es.gtorresdev.jfxtradechart.componets.YAxis;
+import es.gtorresdev.jfxtradechart.models.Range;
 import javafx.geometry.BoundingBox;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -19,6 +22,7 @@ public class ChartCanvas extends Pane {
 
     private final Canvas canvas;
     private final GraphicsContext graphContext;
+    private final YAxis yAxis;
     private final Grid grid;
 
     public ChartCanvas() {
@@ -33,6 +37,7 @@ public class ChartCanvas extends Pane {
         graphContext = canvas.getGraphicsContext2D();
         graphContext.setLineWidth(1);
 
+        yAxis = new YAxis(graphContext);
         grid = new Grid(graphContext);
 
         this.setMinHeight(150);
@@ -79,19 +84,15 @@ public class ChartCanvas extends Pane {
     }
 
     private void drawSideSection() {
-        double sideSectionWidth = sideSectionVisible ? SIDE_SECTION_WIDTH : 0;
-        double topSectionHeight = topSectionVisible ? TOP_SECTION_HEIGHT : 0;
+        double sideSectionWidth = sideSectionVisible ? SIDE_SECTION_WIDTH: 0;
         double bottomSectionHeight = bottomSectionVisible ? BOTTOM_SECTION_HEIGHT : 0;
 
-        double layoutX = canvas.getWidth() - sideSectionWidth;
-        double layoutY = topSectionHeight;
-        double width = sideSectionWidth;
-        double height = canvas.getHeight() - topSectionHeight - bottomSectionHeight;
+        double startX = canvas.getWidth() - sideSectionWidth;
+        double startY = topSectionVisible ? TOP_SECTION_HEIGHT - 0.5: 0.5;
+        double height = canvas.getHeight() - startY - bottomSectionHeight;
 
-        graphContext.setStroke(Color.GRAY);
-        for (double i = height; i >= 0; i -= 32) {
-            graphContext.strokeLine(layoutX, layoutY + i, layoutX + 5, layoutY + i);
-        }
+        yAxis.setBounds(new BoundingBox(startX, startY, sideSectionWidth, height));
+        yAxis.setRange(new Range(5, 2));
     }
 
     private void drawBottomSection() {
