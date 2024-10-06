@@ -1,6 +1,8 @@
-package es.gtorresdev.jfxtradechart;
+package es.gtorresdev.jfxtradechart.services;
 
+import es.gtorresdev.jfxtradechart.charts.Chart;
 import es.gtorresdev.jfxtradechart.componets.Grid;
+import es.gtorresdev.jfxtradechart.componets.SymbolDimension;
 import es.gtorresdev.jfxtradechart.componets.YAxis;
 import es.gtorresdev.jfxtradechart.models.Range;
 import javafx.geometry.BoundingBox;
@@ -8,8 +10,12 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import org.jetbrains.annotations.NotNull;
 
-public class ChartCanvas extends Pane {
+import java.util.ArrayList;
+import java.util.List;
+
+public class ChartManager extends Pane {
     private static final double TOP_SECTION_HEIGHT = 30;
     private static final double SIDE_SECTION_WIDTH = 100;
     private static final double BOTTOM_SECTION_HEIGHT = 50;
@@ -24,8 +30,12 @@ public class ChartCanvas extends Pane {
     private final GraphicsContext graphContext;
     private final YAxis yAxis;
     private final Grid grid;
+    private final ChartNotifyService chartNotifyService;
 
-    public ChartCanvas() {
+    private Range range;
+    private final List<Range> rangeList;
+
+    public ChartManager() {
         topSectionVisible = true;
         sideSectionVisible = true;
         bottomSectionVisible = true;
@@ -40,10 +50,19 @@ public class ChartCanvas extends Pane {
         yAxis = new YAxis(graphContext);
         grid = new Grid(graphContext);
 
+        chartNotifyService = new ChartNotifyService();
+
         this.setMinHeight(150);
         this.getChildren().add(canvas);
         this.widthProperty().addListener((obs, oldWidth, newWidth) -> resizeCanvas());
         this.heightProperty().addListener((obs, oldHeight, newHeight) -> resizeCanvas());
+
+        range = new Range();
+        rangeList = new ArrayList<>();
+
+        canvas.setOnMouseMoved(event -> {
+            System.out.println(chartNotifyService.getChartListener(0).getInfoAtPosition(event.getX(), event.getY()));
+        });
     }
 
     private void resizeCanvas() {
@@ -92,7 +111,8 @@ public class ChartCanvas extends Pane {
         double height = canvas.getHeight() - startY - bottomSectionHeight;
 
         yAxis.setBounds(new BoundingBox(startX, startY, sideSectionWidth, height));
-        yAxis.setRange(new Range(5, 2));
+        yAxis.setRange(range);
+        yAxis.update();
     }
 
     private void drawBottomSection() {
@@ -118,10 +138,45 @@ public class ChartCanvas extends Pane {
         double width = canvas.getWidth() - sideSectionWidth;
         double height = canvas.getHeight() - startY - bottomSectionHeight - 0.5;
 
+        grid.setBounds(new BoundingBox(startX, startY, width, height));
+        grid.setColor(Color.BLUE);
+        chartNotifyService.notifyBounds(new BoundingBox(startX, startY, width, height));
+        chartNotifyService.notifyRedraw();
+
+        graphContext.setLineDashes(0);
         graphContext.setStroke(Color.GRAY);
         graphContext.strokeRect(startX, startY, width, height);
 
-        grid.setBounds(new BoundingBox(startX, startY, width, height));
-        grid.setColor(Color.BLUE);
+    }
+
+    public void addChart(@NotNull Chart<?> chart) {
+        chart.setGraphicsContext(graphContext);
+        chartNotifyService.addChartListener(chart);
+    }
+
+    public void setSizeElement(SymbolDimension symbolDimension) {
+        chartNotifyService.notifySymbolDimension(symbolDimension);
+    }
+
+    public void mergeRange(@NotNull Range chartRange) {
+        if (!rangeList.contains(chartRange)) {
+            rangeList.add(chartRange);
+        }
+
+        double upperRange = Double.MIN_VALUE;
+        double lowerRange = Double.MAX_VALUE;
+
+        for (Range range : rangeList) {
+            upperRange = Math.max(upperRange, range.getUpperRange());
+            lowerRange = Math.min(lowerRange, range.getLowerRange());
+        }
+
+        range = new Range(upperRange, lowerRange);
+        chartNotifyService.notifyRange(range);
+        redraw();
+    }
+
+    public void removeRange(Range range) {
+        rangeList.remove(range);
     }
 }
