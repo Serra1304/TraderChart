@@ -1,5 +1,7 @@
 package es.gtorresdev.jfxtradechart.componets.axis;
 
+import es.gtorresdev.jfxtradechart.models.Range;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +10,7 @@ import java.util.List;
  * La distribución se realiza de manera que las divisiones tengan un tamaño mínimo especificado
  * y se ajusten a la longitud del eje de acuerdo con la cantidad máxima de divisiones.
  */
-public class LinearAxisDistribution implements AxisDistribution {
+public class LinearAxisDistribution implements RangeDistributable {
     private static final int DEFAULT_NUMBER_OF_DIVISION = 5;
     private static final double DEFAULT_MIN_DIVISION_SIZE = 25.0;
 
@@ -21,6 +23,13 @@ public class LinearAxisDistribution implements AxisDistribution {
      */
     public LinearAxisDistribution() {
         this(DEFAULT_NUMBER_OF_DIVISION, DEFAULT_MIN_DIVISION_SIZE);
+    }
+
+    /**
+     * Crea una nueva instancia de LinearAxisDistribution con un número de divisiones proporcionado.
+     */
+    public LinearAxisDistribution(int numberOfDivision) {
+        this(numberOfDivision, DEFAULT_MIN_DIVISION_SIZE);
     }
 
     /**
@@ -45,6 +54,26 @@ public class LinearAxisDistribution implements AxisDistribution {
         double divisionSize = (double) length / numDivision;
 
         return generateDistributionValues(length, divisionSize);
+    }
+
+    /**
+     * Genera una lista de valores distribuidos uniformemente dentro del rango especificado.
+     * La distribución se basa en la longitud indicada, que determina el número de divisiones.
+     *
+     * @param range el objeto {@code Range} que representa los límites inferior y superior para la distribución
+     * @param length la longitud utilizada para calcular el número de divisiones dentro del rango
+     * @return una {@code List<Double>} que contiene los valores distribuidos desde el límite inferior hasta el superior del rango
+     */
+    @Override
+    public List<Double> rangeDistribute(Range range, int length) {
+        int numDivision = calculateDivisions(length);
+        double rangeStep = range.getRangeWidth() / numDivision;
+        List<Double> rangeList  = new ArrayList<>();
+
+        for (int i = 0; i <= numDivision; i++) {
+            rangeList.add(i * rangeStep);
+        }
+        return rangeList;
     }
 
     /**

@@ -1,5 +1,7 @@
 package es.gtorresdev.jfxtradechart.componets.axis;
 
+import es.gtorresdev.jfxtradechart.models.Range;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,7 +9,7 @@ import java.util.List;
  * La clase GeometricAxisDistribution representa una distribución geométrica
  * de divisiones en un eje, donde cada división aumenta según una tasa geométrica.
  */
-public class GeometricAxisDistribution implements AxisDistribution{
+public class GeometricAxisDistribution implements RangeDistributable{
     private static final double DEFAULT_RATE = 1.5;
     private static final int DEFAULT_MIN_DIVISION_SIZE = 25;
 
@@ -44,6 +46,35 @@ public class GeometricAxisDistribution implements AxisDistribution{
     public List<Integer> distribute(int length) {
         int numDivision = calculateDivisions(length);
         return generateDistributionValues(length, numDivision);
+    }
+
+    /**
+     * Genera una lista de valores distribuidos geométricamente dentro del rango especificado.
+     * La distribución geométrica se basa en una progresión geométrica ajustada, donde cada
+     * incremento está determinado por un factor de razón y un tamaño mínimo de división.
+     * Los valores generados están limitados al ancho del rango proporcionado.
+     *
+     * @param range el objeto {@code Range} que representa los límites inferior y superior del rango
+     *              en el cual se distribuirán los valores geométricos
+     * @param axisLength la longitud del eje utilizada para determinar el número de divisiones
+     * @return una {@code List<Double>} que contiene los valores distribuidos geométricamente desde
+     *         el inicio hasta el límite superior del rango especificado
+     */
+    @Override
+    public List<Double> rangeDistribute(Range range, int axisLength) {
+        int numDivision = calculateDivisions(axisLength);
+        double currentPositions = 0.0;
+        double geometricSum = calculateGeometricSum(numDivision);
+        double adjustmentFactor = range.getRangeWidth() / geometricSum;
+        List<Double> geomValues = new ArrayList<>();
+
+        geomValues.add(currentPositions);
+
+        for (int i = 0; i < numDivision; i++) {
+            currentPositions += minDivisionSize * Math.pow(rate, numDivision - i - 1) * adjustmentFactor;
+            geomValues.add(Math.min(currentPositions, range.getRangeWidth()));
+        }
+        return geomValues;
     }
 
     /**

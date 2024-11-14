@@ -1,5 +1,7 @@
 package es.gtorresdev.jfxtradechart.componets.axis;
 
+import es.gtorresdev.jfxtradechart.models.Range;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,7 +9,7 @@ import java.util.List;
  * La clase LogarithmicAxisDistribution representa una distribución logarítmica de divisiones en un eje,
  * donde cada división está calculada en función de una base logarítmica específica.
  */
-public class LogarithmicAxisDistribution implements AxisDistribution{
+public class LogarithmicAxisDistribution implements RangeDistributable{
     private static final double DEFAULT_BASE = 1.5;
     private static final int DEFAULT_MIN_DIVISION_SIZE = 25;
 
@@ -51,6 +53,36 @@ public class LogarithmicAxisDistribution implements AxisDistribution{
     public List<Integer> distribute(int length) {
         int numDivision = calculateDivisions(length);
         return generateDistributionValues(length, numDivision);
+    }
+
+    /**
+     * Genera una lista de valores distribuidos logarítmicamente dentro del rango especificado.
+     * La distribución se calcula de acuerdo con la longitud del eje, generando divisiones
+     * logarítmicas donde las primeras divisiones están más cerca y las últimas están
+     * más separadas entre sí.
+     *
+     * @param range el objeto {@code Range} que representa los límites inferior y superior del rango
+     *              en el cual se distribuirán los valores logarítmicos
+     * @param axisLength la longitud del eje utilizada para determinar el número de divisiones
+     * @return una {@code List<Double>} que contiene los valores distribuidos logarítmicamente desde
+     *         el límite superior hasta el inferior del rango especificado
+     */
+    @Override
+    public List<Double> rangeDistribute(Range range, int axisLength) {
+        int numDivision = calculateDivisions(axisLength);
+        List<Double> logList = new ArrayList<>();
+
+        double logMax = Math.log(numDivision + 1) / Math.log(base);
+
+        for (int i = 0; i <= numDivision; i++) {
+            double logValue = Math.log(i + 1) / Math.log(base);
+            double logRange = (logValue / logMax) * range.getRangeWidth();
+
+            if (logRange <= range.getUpperRange()) {
+                logList.add(logRange);
+            }
+        }
+        return logList;
     }
 
     /**
